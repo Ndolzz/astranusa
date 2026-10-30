@@ -8,7 +8,7 @@ ASTRANUSA adalah game MOBA 5v5 offline melawan AI bot dengan inspirasi mitologi,
 | --- | --- | --- |
 | SDD-00 | Project Foundation | Accepted (2026-10-30) |
 | SPEC Batch | Update System & Data Persistence | Approved (2026-10-30) |
-| SDD-01 | Repository & CI Foundation | In Progress (2026-10-30) |
+| SDD-01 | Repository & CI Foundation | Accepted (2026-10-30) |
 
 ## Dokumentasi
 

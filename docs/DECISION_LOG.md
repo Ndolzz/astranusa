@@ -109,7 +109,7 @@ Status yang digunakan:
 ### P-010 — Orientasi landscape dengan viewport 1280x720 dan stretch canvas_items/expand
 
 - Status: Accepted (disetujui pemilik proyek pada 2026-10-30).
-- Konteks: MOBA memerlukan bidang pandang horizontal yang lebar; 1280x720 adalah basis desain UI yang lazim untuk perangkat kelas menengah; mode `canvas_items` dengan aspek `expand` menoleransi rasio layar dan notch yang berbeda.
+- Konteks: MOBA membutuhkan bidang pandang horizontal yang lebar; 1280x720 adalah basis desain UI yang lazim untuk perangkat kelas menengah; mode `canvas_items` dengan aspek `expand` menoleransi rasio layar dan notch yang berbeda.
 - Konsekuensi: Seluruh UI dirancang pada basis 1280x720 landscape; pengujian rasio non-16:9 dimulai pada tahap UI (SDD-04).
 
 ### P-011 — Tooling lint: gdtoolkit 4.5.0
@@ -155,6 +155,12 @@ Status yang digunakan:
 - Status: Accepted (disetujui pemilik proyek pada 2026-10-30).
 - Konteks: Eksekusi keempat workflow Android Build (dispatch manual pemilik proyek, 2026-10-30) lolos seluruh verifikasi kecuali arsitektur: APK memuat arm64-v8a namun tidak memuat armeabi-v7a. `export_presets.cfg` memakai kunci gaya lama (`architectures/ARM64`, `architectures/ARMEABI_V7A`, `architectures/X86_64`) yang tidak dikenali Godot 4.7 — Godot 4.2 ke atas memakai nama ABI huruf kecil — sehingga editor mengabaikan nilai tersebut dan mengekspor armeabi-v7a dengan bawaan nonaktif. Harness TF-03 selama ini memvalidasi kunci lama yang sama sehingga lolos secara false positive.
 - Konsekuensi: Kunci arsitektur preset diganti menjadi `architectures/arm64-v8a=true`, `architectures/armeabi-v7a=true`, `architectures/x86=false`, `architectures/x86_64=false`; assertion harness TF-03 diarahkan ke kunci baru. Kebutuhan arsitektur P-009 (kedua ABI aktif) tidak berubah; tidak ada perubahan versi Godot, workflow, maupun nilai versi.
+
+### P-018 — Acceptance SDD-01 setelah eksekusi kelima dan pengujian perangkat
+
+- Status: Accepted (disetujui pemilik proyek pada 2026-10-30).
+- Konteks: Eksekusi kelima workflow Android Build (run #5, dispatch manual pemilik proyek, 2026-10-30) selesai success dalam 1 menit setelah empat kegagalan yang masing-masing diperbaiki oleh P-014 s.d. P-017. Verifikasi aapt2 mengonfirmasi applicationId `com.ndolzz.astranusa`, versionCode 1, versionName 0.1.0, serta arsitektur arm64-v8a dan armeabi-v7a sesuai P-009, dan artifact `astranusa-debug-apk` tersedia. Pemilik proyek kemudian melakukan pengujian manual MF-01 s.d. MF-06 pada perangkat Android nyata dan seluruhnya dinyatakan lolos pada 2026-10-30.
+- Konsekuensi: Seluruh kriteria acceptance SDD-01 terpenuhi (TF-01 s.d. TF-08, WF-01 s.d. WF-03, MF-01 s.d. MF-06) dan tahap Repository & CI Foundation dinyatakan selesai. Laporan fondasi, rencana pengujian, spesifikasi pipeline, roadmap, dan README diperbarui dengan hasil eksekusi kelima. Tahap berikutnya SDD-02 (Core Framework) dapat dimulai sesuai aturan tahapan roadmap.
 
 ## Bagian 3: Keputusan Terbuka
 

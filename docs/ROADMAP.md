@@ -14,7 +14,7 @@ Roadmap ini mendefinisikan tahapan implementasi bertahap. Setiap tahap memiliki 
 | Tahap | Nama | Tujuan Utama | Kriteria Keluar Utama | Status |
 | --- | --- | --- | --- | --- |
 | SDD-00 | Project Foundation | Fondasi dokumentasi: overview, arsitektur, decision log, roadmap, struktur SDD. | Dokumen fondasi disetujui; repository terinisialisasi dengan struktur dasar. | Accepted (2026-10-30) |
-| SDD-01 | Repository & CI Foundation | Inisialisasi proyek Godot 4 pada `game/`, workflow validasi dan pengujian dasar, penguncian versi. | CI berjalan hijau; versi Godot dan dependensi terkunci; keputusan O-001 hingga O-004, O-008 diselesaikan. | In Progress (2026-10-30) |
+| SDD-01 | Repository & CI Foundation | Inisialisasi proyek Godot 4 pada `game/`, workflow validasi dan pengujian dasar, penguncian versi. | CI berjalan hijau; versi Godot dan dependensi terkunci; keputusan O-001 hingga O-004, O-008 diselesaikan. | Accepted (2026-10-30) |
 | SDD-02 | Core Framework | Layanan inti: event bus, scene router, config service, save service, state machine, object pool. | Layanan inti berfungsi dan memiliki unit test yang berjalan di CI. | Not Started |
 | SDD-03 | Data Layer | Skema dan validator data konfigurasi (hero, item, emblem, battle spell, rank, nickname); data sampel satu hero. | Validasi konfigurasi berjalan di CI; keputusan O-005 dan O-006 diselesaikan. | Not Started |
 | SDD-04 | Lobby Shell | Struktur lobby: bottom navigation lima tab, header profil, placeholder 3D showcase, penyimpanan profil lokal. | Lobby dapat dinavigasi; profil tersimpan antar sesi; keputusan O-010 dan O-013 diselesaikan. | Not Started |

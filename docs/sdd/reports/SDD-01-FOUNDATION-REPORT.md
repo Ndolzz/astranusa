@@ -1,6 +1,6 @@
 # SDD-01-FOUNDATION-REPORT: Laporan Tahap Repository & CI Foundation
 
-- Status: In Review
+- Status: Accepted (verifikasi akhir selesai; disetujui pemilik proyek pada 2026-10-30)
 - Tahap: SDD-01 (Repository & CI Foundation)
 - Tanggal pekerjaan: 2026-10-30
 - Pemilik laporan: Arsitek proyek
@@ -87,21 +87,21 @@ Terverifikasi pada eksekusi workflow Validation, run `41002625549` (commit `57af
 | TF-01 s.d. TF-05 (test harness fondasi: metadata versi, konfigurasi proyek, identitas export, struktur direktori, parsing skrip) | Lolos. Step `Run foundation tests` selesai success; harness keluar kode nol. |
 | TF-06 (gdlint atas `src`, `tools`, `tests`) | Lolos. Job `Lint GDScript (gdlint)` selesai success tanpa pelanggaran. |
 | TF-07 (validasi versi CI terhadap rilis sebelumnya) | Lolos. Step `Validate version metadata against previous release` selesai success; baseline 0 (belum ada rilis), versionCode 1. |
-| TF-08 (sinkronisasi preset export oleh `apply_version.gd`) | Menunggu eksekusi workflow Android Build. |
+| TF-08 (sinkronisasi preset export oleh `apply_version.gd`) | Lolos. Langkah Apply version metadata pada eksekusi kelima workflow Android Build (run #5, 2026-10-30) selesai success; verifikasi aapt2 mengonfirmasi versionCode 1 dan versionName 0.1.0 sesuai `version.json`. |
 
 ## 6. Hasil GitHub Actions
 
 | Workflow | Pemicu | Hasil |
 | --- | --- | --- |
 | Validation | Push ke `main` (commit `57af8c7`) | Success. Kedua job (`Lint GDScript (gdlint)`, `Validate project and run foundation tests`) selesai success: [run 41002625549](https://github.com/Ndolzz/astranusa/actions/runs/41002625549). |
-| Android Build | Dispatch manual atau tag `v*` (P-012) | Belum dieksekusi pada tahap ini; menunggu dispatch manual oleh pemilik proyek karena pemicunya sengaja bukan push biasa. |
+| Android Build | Dispatch manual atau tag `v*` (P-012) | Success pada eksekusi kelima (run #5, dispatch manual pemilik proyek, 2026-10-30, 1 menit); artifact `astranusa-debug-apk` tersedia: [halaman Android Build](https://github.com/Ndolzz/astranusa/actions/workflows/android-build.yml). Empat percobaan sebelumnya gagal dan diperbaiki melalui P-014 s.d. P-017. |
 
 ## 7. Status APK Build
 
 1. Belum ada APK yang dihasilkan pada tahap ini karena workflow Android Build belum dieksekusi.
 2. Langkah eksekusi: buka halaman [Actions - Android Build](https://github.com/Ndolzz/astranusa/actions/workflows/android-build.yml), pilih `Run workflow` pada branch `main`, lalu unduh artifact `astranusa-debug-apk` setelah job selesai.
 3. Setelah APK tersedia, pemilik proyek melakukan pengujian manual MF-01 s.d. MF-05 pada [FOUNDATION-TEST-PLAN](../verification/FOUNDATION-TEST-PLAN.md) di perangkat Android kelas menengah (Android 8.0 ke atas).
-4. Kompatibilitas perangkat Android nyata belum diklaim sampai langkah 3 selesai dan dilaporkan.
+4. Kompatibilitas perangkat Android nyata diklaim setelah langkah 3 selesai dan dilaporkan; hasil MF-01 s.d. MF-06 dicatat pada bagian 7.1 butir 11.
 
 ### 7.1 Verifikasi Akhir (2026-10-30)
 
@@ -115,10 +115,11 @@ Terverifikasi pada eksekusi workflow Validation, run `41002625549` (commit `57af
 8. Eksekusi kedua workflow Android Build (dispatch manual pemilik proyek, 2026-10-30) gagal pada langkah Export debug APK: Godot tidak membuat direktori tujuan `build/` secara otomatis (`Target folder does not exist or is inaccessible`). Seluruh langkah sebelumnya lolos sehingga perbaikan P-014 terbukti memadai; perbaikan P-015 menambahkan `mkdir -p build` sebelum ekspor. Commit P-014 juga tanpa sengaja menyimpan `docs/DECISION_LOG.md` dalam lapisan enkode JSON; commit ini memulihkan formatnya tanpa mengubah isi keputusan.
 9. Eksekusi ketiga workflow Android Build (dispatch manual pemilik proyek, 2026-10-30) berhasil mengekspor APK — P-015 terbukti bekerja — namun gagal pada langkah Verify APK identity and version: `aapt` legacy tidak dapat membaca manifest biner Android buatan Godot (`failed to read attribute 'android:required': attribute is not an integer value`). Perbaikan P-016 mengganti alat verifikasi ke `aapt2`. APK telah dihasilkan ekspor namun artifact belum diunggah karena verifikasi gagal lebih dahulu; belum ada APK yang dapat diunduh.
 10. Eksekusi keempat workflow Android Build (dispatch manual pemilik proyek, 2026-10-30) lolos seluruh verifikasi kecuali arsitektur: APK memuat arm64-v8a namun tidak memuat armeabi-v7a. Penyebab: `export_presets.cfg` memakai kunci arsitektur gaya lama (`ARM64`, `ARMEABI_V7A`) yang diabaikan Godot 4.7, sehingga armeabi-v7a terekspor dengan nilai bawaan nonaktif. Harness TF-03 dikoreksi karena selama ini memvalidasi kunci lama yang sama (false positive). Perbaikan P-017 mengganti kunci preset menjadi nama ABI huruf kecil dan memperbarui assertion harness.
+11. Eksekusi kelima workflow Android Build (dispatch manual pemilik proyek, run #5, 2026-10-30) selesai success dalam 1 menit. Seluruh verifikasi aapt2 lolos — applicationId `com.ndolzz.astranusa`, versionCode 1, versionName 0.1.0, arsitektur arm64-v8a dan armeabi-v7a aktif — membuktikan perbaikan P-014 s.d. P-017 memadai. Artifact `astranusa-debug-apk` (APK debug dan `release-notes.md`, retensi 14 hari) tersedia pada halaman run. Pemilik proyek kemudian melakukan pengujian manual MF-01 s.d. MF-06 pada perangkat Android nyata dan seluruhnya dinyatakan lolos pada 2026-10-30; dengan ini seluruh kriteria acceptance SDD-01 terpenuhi dan tahap dinyatakan selesai (P-018).
 
 ## 8. Kendala dan Keputusan yang Masih Terbuka
 
-1. Kompatibilitas perangkat Android nyata belum dapat diklaim sebelum MF-01 s.d. MF-05 dilakukan pemilik proyek pada perangkat kelas menengah Android 8.0 ke atas.
+1. Kompatibilitas perangkat Android nyata telah diverifikasi: MF-01 s.d. MF-06 dilakukan pemilik proyek pada perangkat kelas menengah Android 8.0 ke atas dan seluruhnya lolos (2026-10-30; bagian 7.1 butir 11).
 2. Signing rilis belum aktif; provisioning keystore produksi tetap pada O-018 (SDD-13). Tidak ada kredensial yang direkayasa.
 3. Nilai minSdk dan targetSdk melekat pada prebuilt template; bila kelak diperlukan kendali penuh (misalnya penyempitan arsitektur atau gradle build), dievaluasi pada SDD-13.
 4. Keputusan terbuka berikutnya sesuai tahap batas: O-005 dan O-006 (SDD-03), O-010 dan O-013 (SDD-04), O-012 (SDD-05).
@@ -128,6 +129,7 @@ Terverifikasi pada eksekusi workflow Validation, run `41002625549` (commit `57af
 8. Eksekusi kedua Android Build gagal pada langkah Export debug APK karena direktori tujuan tidak dibuat (P-015). Diperlukan dispatch ketiga oleh pemilik proyek untuk membuktikan build lolos.
 9. Eksekusi ketiga gagal pada langkah verifikasi karena `aapt` legacy tidak dapat membaca manifest biner buatan Godot (P-016). Diperlukan dispatch keempat oleh pemilik proyek.
 10. Eksekusi keempat gagal pada verifikasi arsitektur karena kunci preset gaya lama diabaikan Godot 4 (P-017). Diperlukan dispatch kelima oleh pemilik proyek.
+11. Seluruh kegagalan eksekusi pertama s.d. keempat (butir 7 s.d. 10) telah ditebus: eksekusi kelima workflow Android Build selesai success dan pengujian perangkat MF-01 s.d. MF-06 lolos (bagian 7.1 butir 11). Tidak ada kegagalan build yang masih terbuka pada penutupan tahap ini (P-018).
 
 ## 9. Acceptance Status
 
@@ -140,12 +142,12 @@ Terverifikasi pada eksekusi workflow Validation, run `41002625549` (commit `57af
 | 5. Metadata versi valid. | Terpenuhi; divalidasi TF-01 dan langkah CI TF-07. |
 | 6. Automated tests benar-benar berjalan. | Terpenuhi. Test harness dieksekusi pada CI dengan hasil success (run `41002625549`). |
 | 7. Validation workflow berhasil. | Terpenuhi. Kedua job selesai success. |
-| 8. Android build menghasilkan APK debug atau kendala spesifik dilaporkan. | Kendala spesifik dilaporkan: percobaan pertama (run `41003932265`) gagal pada langkah setup SDK (P-014); percobaan kedua gagal pada langkah Export debug APK karena direktori tujuan `build/` tidak dibuat (P-015); percobaan ketiga berhasil mengekspor APK namun gagal pada langkah verifikasi karena `aapt` legacy (P-016); percobaan keempat gagal pada verifikasi arsitektur karena kunci preset gaya lama diabaikan Godot 4 (P-017). Perbaikan P-013 s.d. P-017 diterapkan; menunggu dispatch kelima oleh pemilik proyek. |
+| 8. Android build menghasilkan APK debug atau kendala spesifik dilaporkan. | Terpenuhi. Eksekusi kelima (run #5, dispatch manual pemilik proyek, 2026-10-30) menghasilkan APK debug terverifikasi (applicationId, versionCode, versionName, arsitektur arm64-v8a dan armeabi-v7a) dengan artifact tersedia. Empat kendala spesifik sebelumnya dilaporkan dan diperbaiki: setup SDK (P-014), direktori ekspor (P-015), `aapt` legacy (P-016), kunci preset gaya lama (P-017). |
 | 9. Dokumentasi saling konsisten. | Terpenuhi; ditinjau silang antar dokumen. |
 | 10. Tidak ada perubahan di luar scope. | Terpenuhi; tidak ada gameplay, hero, AI, lobby, atau sistem pertandingan yang diimplementasikan. |
 
 ## 10. Rekomendasi Tahap SDD Berikutnya
 
-1. Pemilik proyek menjalankan workflow Android Build secara manual (perbaikan P-013 s.d. P-017 telah diterapkan), mengunduh artifact APK debug, dan melakukan MF-01 s.d. MF-05 pada perangkat nyata, lalu menetapkan acceptance SDD-01.
+1. Telah dilakukan: pemilik proyek mendispatch eksekusi kelima workflow Android Build, mengunduh artifact APK debug, dan melakukan MF-01 s.d. MF-06 pada perangkat nyata dengan seluruhnya lolos; acceptance SDD-01 ditetapkan pada 2026-10-30 (P-018).
 2. Tahap berikutnya: SDD-02 (Core Framework). Persiapan yang disarankan: requirement dan desain layanan inti (event bus, scene router, config service, save service, state machine, object pool), dengan tetap menahan implementasi hingga spesifikasinya disetujui.
 3. Evaluasi ulang kebutuhan framework pengujian (GUT/gdUnit4) dilakukan pada requirement SDD-02 sebagaimana dicatat pada P-008.

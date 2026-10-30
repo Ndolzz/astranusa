@@ -3,7 +3,7 @@
 - Status: Approved (disetujui pemilik proyek pada 2026-10-30)
 - Sistem: Fondasi Repository, Konfigurasi, dan CI
 - Tahap roadmap terikat: SDD-01
-- Terakhir diperbarui: 2026-10-30 (hasil eksekusi CI dicatat; prosedur manual dirinci pada verifikasi akhir SDD-01)
+- Terakhir diperbarui: 2026-10-30 (hasil eksekusi kelima dan pengujian manual perangkat dicatat; seluruh kriteria lolos)
 
 ## 1. Tujuan
 
@@ -76,17 +76,17 @@ Prasyarat: perangkat Android kelas menengah (Android 8.0 / API 26 ke atas, arsit
 
 Bukti eksekusi: [Validation run 41002625549](https://github.com/Ndolzz/astranusa/actions/runs/41002625549) pada commit `57af8c7` (2026-10-30); verifikasi akhir pada HEAD `16fe5bf` dikonfirmasi oleh eksekusi Validation run #2 yang selesai success (2026-10-30).
 
-Verifikasi akhir SDD-01 (2026-10-30): halaman Actions mengonfirmasi workflow Android Build belum memiliki eksekusi (nol run), sehingga WF-02 dan WF-03 tetap menunggu dispatch manual. Tinjauan statis menemukan risiko kegagalan langkah penerimaan lisensi SDK (`yes | sdkmanager --licenses` exit 141 di bawah `set -o pipefail`); temuan dan mitigasinya dicatat pada [CI-PIPELINE-SPEC](../specifications/CI-PIPELINE-SPEC.md) bagian 10 (P-013). Percobaan dispatch pertama (run `41003932265`) kemudian gagal pada langkah setup SDK karena kerusakan upstream `android-actions/setup-android` v3; perbaikan dicatat sebagai P-014. Percobaan kedua gagal pada langkah Export debug APK karena Godot tidak membuat direktori tujuan secara otomatis; perbaikan dicatat sebagai P-015. Percobaan ketiga berhasil mengekspor APK namun gagal pada langkah verifikasi karena `aapt` legacy tidak dapat membaca manifest biner buatan Godot; perbaikan dicatat sebagai P-016. Percobaan keempat lolos seluruh verifikasi kecuali armeabi-v7a karena kunci arsitektur preset memakai nama gaya lama yang diabaikan Godot 4; perbaikan dicatat sebagai P-017, termasuk koreksi assertion harness TF-03 yang selama ini memvalidasi kunci lama (false positive).
+Verifikasi akhir SDD-01 (2026-10-30): halaman Actions mengonfirmasi workflow Android Build belum memiliki eksekusi (nol run), sehingga WF-02 dan WF-03 tetap menunggu dispatch manual. Tinjauan statis menemukan risiko kegagalan langkah penerimaan lisensi SDK (`yes | sdkmanager --licenses` exit 141 di bawah `set -o pipefail`); temuan dan mitigasinya dicatat pada [CI-PIPELINE-SPEC](../specifications/CI-PIPELINE-SPEC.md) bagian 10 (P-013). Percobaan dispatch pertama (run `41003932265`) kemudian gagal pada langkah setup SDK karena kerusakan upstream `android-actions/setup-android` v3; perbaikan dicatat sebagai P-014. Percobaan kedua gagal pada langkah Export debug APK karena Godot tidak membuat direktori tujuan secara otomatis; perbaikan dicatat sebagai P-015. Percobaan ketiga berhasil mengekspor APK namun gagal pada langkah verifikasi karena `aapt` legacy tidak dapat membaca manifest biner buatan Godot; perbaikan dicatat sebagai P-016. Percobaan keempat lolos seluruh verifikasi kecuali armeabi-v7a karena kunci arsitektur preset memakai nama gaya lama yang diabaikan Godot 4; perbaikan dicatat sebagai P-017, termasuk koreksi assertion harness TF-03 yang selama ini memvalidasi kunci lama (false positive). Percobaan kelima (run #5, dispatch manual pemilik proyek, 2026-10-30) selesai success dalam 1 menit: verifikasi aapt2 melaporkan applicationId, versionCode, versionName, serta arsitektur arm64-v8a dan armeabi-v7a sesuai, dan artifact `astranusa-debug-apk` tersedia. Pemilik proyek kemudian melakukan MF-01 s.d. MF-06 pada perangkat Android nyata dan seluruhnya dinyatakan lolos pada 2026-10-30; tahap SDD-01 dinyatakan selesai (P-018).
 
 | ID | Status | Catatan |
 | --- | --- | --- |
 | TF-01 s.d. TF-05 | Lolos | Step `Run foundation tests` selesai success; harness keluar kode nol. |
 | TF-06 | Lolos | Job `Lint GDScript (gdlint)` selesai success tanpa pelanggaran. |
 | TF-07 | Lolos | Step `Validate version metadata against previous release` selesai success (baseline 0). |
-| TF-08 | Menunggu | Dieksekusi pada workflow Android Build. |
+| TF-08 | Lolos | Langkah Apply version metadata pada eksekusi kelima workflow Android Build (run #5, 2026-10-30) selesai success; verifikasi aapt2 mengonfirmasi versionCode 1 dan versionName 0.1.0 sesuai `version.json`. |
 | WF-01 | Lolos | Kedua job Validation selesai success. |
-| WF-02, WF-03 | Gagal pada empat percobaan | Percobaan pertama gagal pada langkah setup SDK (P-014); kedua gagal pada langkah Export debug APK (P-015); ketiga gagal pada verifikasi karena `aapt` legacy (P-016); keempat gagal pada verifikasi armeabi-v7a karena kunci preset gaya lama diabaikan Godot 4 (P-017). Menunggu dispatch kelima oleh pemilik proyek. |
-| MF-01 s.d. MF-06 | Menunggu pengujian pemilik proyek | Memerlukan perangkat Android nyata; MF-04 dan MF-05 ditambahkan pada verifikasi akhir. |
+| WF-02, WF-03 | Lolos | Percobaan kelima (run #5, dispatch manual pemilik proyek, 2026-10-30) selesai success dalam 1 menit; job `build-debug-apk` lolos, artifact `astranusa-debug-apk` tersedia, dan verifikasi melaporkan applicationId `com.ndolzz.astranusa`, versionCode 1, versionName 0.1.0, serta arsitektur arm64-v8a dan armeabi-v7a sesuai. Empat percobaan sebelumnya gagal dan diperbaiki melalui P-014 s.d. P-017. |
+| MF-01 s.d. MF-06 | Lolos | Dilakukan pemilik proyek pada perangkat Android nyata terhadap artifact eksekusi kelima (2026-10-30): instalasi, scene boot `ASTRANUSA 0.1.0 (build 1)`, orientasi landscape, stabilitas 60 detik, dan durasi startup dinyatakan lolos; hasil dicatat pada laporan tahap (MF-06). |
 
 ## 7. Referensi
 
