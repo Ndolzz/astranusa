@@ -106,13 +106,13 @@ Job `validate`:
 
 ## 11. Acceptance Criteria
 
-- [ ] Workflow Validation berjalan dan lolos pada push dan pull request.
+- [x] Workflow Validation berjalan dan lolos pada push ke `main` (bukti: [run 41002625549](https://github.com/Ndolzz/astranusa/actions/runs/41002625549), commit `57af8c7`; kedua job success). Verifikasi pada pull request mengikuti pada kontribusi berikutnya.
 - [ ] Workflow Android Build menghasilkan artifact APK debug hasil verifikasi identitas.
-- [ ] Seluruh versi toolchain terkunci dan terdokumentasi pada bagian 8.
-- [ ] Tidak ada kredensial pada repository maupun log workflow.
-- [ ] Build gagal dengan pesan jelas ketika validasi identitas atau versi tidak lolos.
+- [x] Seluruh versi toolchain terkunci dan terdokumentasi pada bagian 8.
+- [x] Tidak ada kredensial pada repository maupun log workflow.
+- [ ] Build gagal dengan pesan jelas ketika validasi identitas atau versi tidak lolos (mekanisme terimplementasi; pembuktian kegagalan direkam pada verifikasi berikutnya).
 
-Status acceptance akan diperbarui pada [SDD-01-FOUNDATION-REPORT](../reports/SDD-01-FOUNDATION-REPORT.md) setelah hasil eksekusi workflow diverifikasi.
+Status acceptance diperbarui pada [SDD-01-FOUNDATION-REPORT](../reports/SDD-01-FOUNDATION-REPORT.md) seiring hasil eksekusi workflow diverifikasi.
 
 ## 12. Referensi
 

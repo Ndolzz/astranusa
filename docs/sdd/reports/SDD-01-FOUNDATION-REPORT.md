@@ -80,15 +80,28 @@ Disetujui pemilik proyek pada 2026-10-30, dicatat pada Decision Log Bagian 2C:
 
 ## 5. Hasil Automated Tests
 
-Menunggu hasil eksekusi workflow pada commit tahap ini. Bagian ini diperbarui setelah hasil workflow Validation diverifikasi melalui GitHub Actions.
+Terverifikasi pada eksekusi workflow Validation, run `41002625549` (commit `57af8c7`, 2026-10-30): [Validation run 41002625549](https://github.com/Ndolzz/astranusa/actions/runs/41002625549).
+
+| Pengujian | Hasil |
+| --- | --- |
+| TF-01 s.d. TF-05 (test harness fondasi: metadata versi, konfigurasi proyek, identitas export, struktur direktori, parsing skrip) | Lolos. Step `Run foundation tests` selesai success; harness keluar kode nol. |
+| TF-06 (gdlint atas `src`, `tools`, `tests`) | Lolos. Job `Lint GDScript (gdlint)` selesai success tanpa pelanggaran. |
+| TF-07 (validasi versi CI terhadap rilis sebelumnya) | Lolos. Step `Validate version metadata against previous release` selesai success; baseline 0 (belum ada rilis), versionCode 1. |
+| TF-08 (sinkronisasi preset export oleh `apply_version.gd`) | Menunggu eksekusi workflow Android Build. |
 
 ## 6. Hasil GitHub Actions
 
-Menunggu hasil eksekusi workflow pada commit tahap ini. Bagian ini diperbarui setelah status eksekusi Validation dan Android Build diverifikasi.
+| Workflow | Pemicu | Hasil |
+| --- | --- | --- |
+| Validation | Push ke `main` (commit `57af8c7`) | Success. Kedua job (`Lint GDScript (gdlint)`, `Validate project and run foundation tests`) selesai success: [run 41002625549](https://github.com/Ndolzz/astranusa/actions/runs/41002625549). |
+| Android Build | Dispatch manual atau tag `v*` (P-012) | Belum dieksekusi pada tahap ini; menunggu dispatch manual oleh pemilik proyek karena pemicunya sengaja bukan push biasa. |
 
 ## 7. Status APK Build
 
-Menunggu hasil eksekusi workflow Android Build. Bagian ini diperbarui setelah status export dan verifikasi artifact diverifikasi. Pengujian pada perangkat Android nyata (MF-01 s.d. MF-03 pada FOUNDATION-TEST-PLAN) menunggu pemilik proyek.
+1. Belum ada APK yang dihasilkan pada tahap ini karena workflow Android Build belum dieksekusi.
+2. Langkah eksekusi: buka halaman [Actions - Android Build](https://github.com/Ndolzz/astranusa/actions/workflows/android-build.yml), pilih `Run workflow` pada branch `main`, lalu unduh artifact `astranusa-debug-apk` setelah job selesai.
+3. Setelah APK tersedia, pemilik proyek melakukan pengujian manual MF-01 s.d. MF-03 pada [FOUNDATION-TEST-PLAN](../verification/FOUNDATION-TEST-PLAN.md) di perangkat Android kelas menengah (Android 8.0 ke atas).
+4. Kompatibilitas perangkat Android nyata belum diklaim sampai langkah 3 selesai dan dilaporkan.
 
 ## 8. Kendala dan Keputusan yang Masih Terbuka
 
@@ -101,19 +114,19 @@ Menunggu hasil eksekusi workflow Android Build. Bagian ini diperbarui setelah st
 
 | Kriteria (dari requirement SDD-01) | Status |
 | --- | --- |
-| 1. Proyek Godot dapat dibuka dan divalidasi. | Menunggu hasil CI (import headless). |
-| 2. Versi Godot terdokumentasi dan dikunci. | Terpenuhi (P-007, workflow terkunci). |
-| 3. Application ID sesuai spesifikasi. | Terpenuhi pada konfigurasi; divalidasi CI. |
-| 4. Struktur direktori dasar tersedia. | Terpenuhi sesuai jadwal REPOSITORY-STRUCTURE-SPEC. |
-| 5. Metadata versi valid. | Terpenuhi pada repository; divalidasi CI. |
-| 6. Automated tests benar-benar berjalan. | Menunggu hasil CI. |
-| 7. Validation workflow berhasil. | Menunggu hasil CI. |
-| 8. Android build menghasilkan APK debug atau kendala spesifik dilaporkan. | Menunggu hasil CI. |
+| 1. Proyek Godot dapat dibuka dan divalidasi. | Terpenuhi. `godot --headless --import` selesai success pada CI. |
+| 2. Versi Godot terdokumentasi dan dikunci. | Terpenuhi (P-007; workflow memakai URL rilis terkunci). |
+| 3. Application ID sesuai spesifikasi. | Terpenuhi pada konfigurasi; divalidasi test harness (TF-03) pada CI. |
+| 4. Struktur direktori dasar tersedia. | Terpenuhi sesuai jadwal REPOSITORY-STRUCTURE-SPEC; divalidasi TF-04. |
+| 5. Metadata versi valid. | Terpenuhi; divalidasi TF-01 dan langkah CI TF-07. |
+| 6. Automated tests benar-benar berjalan. | Terpenuhi. Test harness dieksekusi pada CI dengan hasil success (run `41002625549`). |
+| 7. Validation workflow berhasil. | Terpenuhi. Kedua job selesai success. |
+| 8. Android build menghasilkan APK debug atau kendala spesifik dilaporkan. | Menunggu eksekusi workflow Android Build oleh pemilik proyek (dispatch manual). |
 | 9. Dokumentasi saling konsisten. | Terpenuhi; ditinjau silang antar dokumen. |
 | 10. Tidak ada perubahan di luar scope. | Terpenuhi; tidak ada gameplay, hero, AI, lobby, atau sistem pertandingan yang diimplementasikan. |
 
 ## 10. Rekomendasi Tahap SDD Berikutnya
 
-1. Setelah workflow hijau dan APK debug terverifikasi artifact, pemilik proyek melakukan MF-01 s.d. MF-03 pada perangkat nyata, lalu menetapkan acceptance SDD-01.
+1. Pemilik proyek menjalankan workflow Android Build secara manual, mengunduh artifact APK debug, dan melakukan MF-01 s.d. MF-03 pada perangkat nyata, lalu menetapkan acceptance SDD-01.
 2. Tahap berikutnya: SDD-02 (Core Framework). Persiapan yang disarankan: requirement dan desain layanan inti (event bus, scene router, config service, save service, state machine, object pool), dengan tetap menahan implementasi hingga spesifikasinya disetujui.
 3. Evaluasi ulang kebutuhan framework pengujian (GUT/gdUnit4) dilakukan pada requirement SDD-02 sebagaimana dicatat pada P-008.

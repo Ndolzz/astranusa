@@ -3,7 +3,7 @@
 - Status: Approved (disetujui pemilik proyek pada 2026-10-30)
 - Sistem: Fondasi Repository, Konfigurasi, dan CI
 - Tahap roadmap terikat: SDD-01
-- Terakhir diperbarui: 2026-10-30
+- Terakhir diperbarui: 2026-10-30 (hasil eksekusi CI dicatat)
 
 ## 1. Tujuan
 
@@ -58,10 +58,16 @@ Pengujian ini wajib dilakukan pemilik proyek pada perangkat Android kelas meneng
 
 ## 6. Hasil
 
+Bukti eksekusi: [Validation run 41002625549](https://github.com/Ndolzz/astranusa/actions/runs/41002625549) pada commit `57af8c7` (2026-10-30).
+
 | ID | Status | Catatan |
 | --- | --- | --- |
-| TF-01 s.d. TF-08 | Menunggu eksekusi CI | Diperbarui setelah hasil workflow diverifikasi. |
-| WF-01, WF-02, WF-03 | Menunggu eksekusi CI | Diperbarui setelah hasil workflow diverifikasi. |
+| TF-01 s.d. TF-05 | Lolos | Step `Run foundation tests` selesai success; harness keluar kode nol. |
+| TF-06 | Lolos | Job `Lint GDScript (gdlint)` selesai success tanpa pelanggaran. |
+| TF-07 | Lolos | Step `Validate version metadata against previous release` selesai success (baseline 0). |
+| TF-08 | Menunggu | Dieksekusi pada workflow Android Build. |
+| WF-01 | Lolos | Kedua job Validation selesai success. |
+| WF-02, WF-03 | Menunggu dispatch manual | Pemilik proyek menjalankan workflow Android Build melalui halaman Actions. |
 | MF-01 s.d. MF-04 | Menunggu pengujian pemilik proyek | Memerlukan perangkat Android nyata. |
 
 ## 7. Referensi
