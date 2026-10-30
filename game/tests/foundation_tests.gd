@@ -125,11 +125,11 @@ func _test_export_preset() -> void:
 		"version/name pada preset export harus sama dengan version.json (P-004)"
 	)
 	_check(
-		bool(presets.get_value(android_options, "architectures/ARM64", false)),
+		bool(presets.get_value(android_options, "architectures/arm64-v8a", false)),
 		"Arsitektur arm64-v8a harus aktif pada preset export (P-009)"
 	)
 	_check(
-		bool(presets.get_value(android_options, "architectures/ARMEABI_V7A", false)),
+		bool(presets.get_value(android_options, "architectures/armeabi-v7a", false)),
 		"Arsitektur armeabi-v7a harus aktif pada preset export (P-009)"
 	)
 

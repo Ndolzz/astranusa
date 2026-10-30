@@ -3,7 +3,7 @@
 - Status: Approved (disetujui pemilik proyek pada 2026-10-30)
 - Sistem: Android Packaging & CI Release
 - Tahap roadmap terikat: SDD-01 (fondasi CI), SDD-13 (release candidate)
-- Terakhir diperbarui: 2026-10-30
+- Terakhir diperbarui: 2026-10-30 (kunci arsitektur preset Godot 4 dikoreksi pada P-017)
 
 ## 1. Tujuan
 
@@ -58,6 +58,7 @@ Di luar lingkup: alur pembaruan dari sisi pemain (lihat [UPDATE-SYSTEM-SPEC](UPD
 1. Export preset rilis Android menggunakan: Mobile Renderer (D-003), arsitektur target ditetapkan pada desain SDD-01, versi Godot dan export template terkunci (O-001).
 2. Nilai `applicationId`, `versionCode`, dan `versionName` pada preset export dibaca dari `game/version.json` melalui skrip export headless; tidak ada nilai versi yang ditulis manual pada preset.
 3. `minSdk` mengikuti keputusan O-008 yang ditetapkan pada SDD-01.
+4. Kunci arsitektur pada preset memakai nama ABI huruf kecil Godot 4 (`architectures/arm64-v8a` dan `architectures/armeabi-v7a`); kunci gaya lama (`ARM64`, `ARMEABI_V7A`) diabaikan editor sehingga armeabi-v7a tidak terekspor (P-017).
 
 ## 8. Rancangan Workflow Build APK
 
@@ -107,4 +108,4 @@ Pembuatan keystore produksi, penyimpanan cadangan aman, dan kepemilikannya ditet
 - [UPDATE-SYSTEM-SPEC](UPDATE-SYSTEM-SPEC.md)
 - [DATA-PERSISTENCE-SPEC](DATA-PERSISTENCE-SPEC.md)
 - [UPDATE-TEST-PLAN](../verification/UPDATE-TEST-PLAN.md)
-- [Decision Log](../../DECISION_LOG.md): P-003, P-004, P-005, O-001, O-008, O-016, O-018
+- [Decision Log](../../DECISION_LOG.md): P-003, P-004, P-005, P-017, O-001, O-008, O-016, O-018

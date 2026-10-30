@@ -150,6 +150,12 @@ Status yang digunakan:
 - Konteks: Eksekusi ketiga workflow Android Build (dispatch manual pemilik proyek, 2026-10-30) berhasil mengekspor APK — perbaikan P-015 terbukti bekerja — namun gagal pada langkah Verify APK identity and version: `aapt` legacy tidak dapat membaca manifest biner Android buatan Godot (`failed to read attribute 'android:required': attribute is not an integer value`) karena aapt legacy membaca atribut tersebut sebagai integer. Kegagalan berpola identik pada APK Godot terdokumentasi di proyek lain dan diperbaiki dengan beralih ke `aapt2 dump badging`.
 - Konsekuensi: Langkah verifikasi memakai `aapt2` bawaan build-tools 35.0.1 yang terkunci, dengan kegagalan eksplisit jika aapt2 tidak tersedia. Tidak ada perubahan daftar pemeriksaan (applicationId, versionCode, versionName, arsitektur) maupun langkah lain.
 
+### P-017 — Kunci arsitektur preset export sesuai skema Godot 4
+
+- Status: Accepted (disetujui pemilik proyek pada 2026-10-30).
+- Konteks: Eksekusi keempat workflow Android Build (dispatch manual pemilik proyek, 2026-10-30) lolos seluruh verifikasi kecuali arsitektur: APK memuat arm64-v8a namun tidak memuat armeabi-v7a. `export_presets.cfg` memakai kunci gaya lama (`architectures/ARM64`, `architectures/ARMEABI_V7A`, `architectures/X86_64`) yang tidak dikenali Godot 4.7 — Godot 4.2 ke atas memakai nama ABI huruf kecil — sehingga editor mengabaikan nilai tersebut dan mengekspor armeabi-v7a dengan bawaan nonaktif. Harness TF-03 selama ini memvalidasi kunci lama yang sama sehingga lolos secara false positive.
+- Konsekuensi: Kunci arsitektur preset diganti menjadi `architectures/arm64-v8a=true`, `architectures/armeabi-v7a=true`, `architectures/x86=false`, `architectures/x86_64=false`; assertion harness TF-03 diarahkan ke kunci baru. Kebutuhan arsitektur P-009 (kedua ABI aktif) tidak berubah; tidak ada perubahan versi Godot, workflow, maupun nilai versi.
+
 ## Bagian 3: Keputusan Terbuka
 
 Setiap keputusan terbuka mencantumkan tahap batas: keputusan harus dibuat sebelum tahap tersebut dimulai. Tidak boleh ada asumsi yang menggantikan keputusan terbuka.
