@@ -31,10 +31,11 @@ jobs:
           java-version: "17"
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          accept-android-sdk-licenses: true
       - name: Install pinned Android SDK components
         run: |
           set -euo pipefail
-          yes | sdkmanager --licenses > /dev/null
           sdkmanager --install "platform-tools" "platforms;${ANDROID_PLATFORM}" "build-tools;${ANDROID_BUILD_TOOLS}" > /dev/null
       - name: Cache Godot export templates
         uses: actions/cache@v4

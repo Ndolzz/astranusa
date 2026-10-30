@@ -100,15 +100,26 @@ Terverifikasi pada eksekusi workflow Validation, run `41002625549` (commit `57af
 
 1. Belum ada APK yang dihasilkan pada tahap ini karena workflow Android Build belum dieksekusi.
 2. Langkah eksekusi: buka halaman [Actions - Android Build](https://github.com/Ndolzz/astranusa/actions/workflows/android-build.yml), pilih `Run workflow` pada branch `main`, lalu unduh artifact `astranusa-debug-apk` setelah job selesai.
-3. Setelah APK tersedia, pemilik proyek melakukan pengujian manual MF-01 s.d. MF-03 pada [FOUNDATION-TEST-PLAN](../verification/FOUNDATION-TEST-PLAN.md) di perangkat Android kelas menengah (Android 8.0 ke atas).
+3. Setelah APK tersedia, pemilik proyek melakukan pengujian manual MF-01 s.d. MF-05 pada [FOUNDATION-TEST-PLAN](../verification/FOUNDATION-TEST-PLAN.md) di perangkat Android kelas menengah (Android 8.0 ke atas).
 4. Kompatibilitas perangkat Android nyata belum diklaim sampai langkah 3 selesai dan dilaporkan.
+
+### 7.1 Verifikasi Akhir (2026-10-30)
+
+1. Audit ulang pada HEAD `16fe5bf` (branch tunggal `main`): kondisi repository identik dengan laporan tahap ini; tidak ada perubahan pengguna yang tertimpa.
+2. Workflow Validation dikonfirmasi lolos pada HEAD melalui eksekusi run #2 (commit `16fe5bf`, selesai success).
+3. Halaman Actions mengonfirmasi workflow Android Build belum pernah dieksekusi (nol run) hingga verifikasi ini; tidak ada APK yang dihasilkan dan build tidak diklaim berhasil.
+4. Verifikator tidak memiliki kapabilitas dispatch workflow GitHub Actions melalui tooling yang tersedia; sesuai desain pemicu P-012, eksekusi memerlukan dispatch manual oleh pemilik proyek.
+5. Tinjauan statis workflow menemukan kecacatan berisiko tinggi sebelum eksekusi pertama: `yes | sdkmanager --licenses` exit 141 (SIGPIPE) di bawah `set -euo pipefail`, pola kegagalan CI Android yang terdokumentasi luas. Perbaikan minimal diterapkan sesuai P-013 (disetujui pemilik proyek pada 2026-10-30).
+6. Seluruh butir verifikasi APK (applicationId, versionName, versionCode, arsitektur arm64-v8a dan armeabi-v7a, integritas, scene boot) tetap pending hingga artifact tersedia; kecocokan nilai pada konfigurasi export telah divalidasi test harness (TF-03) namun bukan bukti kompatibilitas perangkat.
 
 ## 8. Kendala dan Keputusan yang Masih Terbuka
 
-1. Kompatibilitas perangkat Android nyata belum dapat diklaim sebelum MF-01 s.d. MF-03 dilakukan pemilik proyek pada perangkat kelas menengah Android 8.0 ke atas.
+1. Kompatibilitas perangkat Android nyata belum dapat diklaim sebelum MF-01 s.d. MF-05 dilakukan pemilik proyek pada perangkat kelas menengah Android 8.0 ke atas.
 2. Signing rilis belum aktif; provisioning keystore produksi tetap pada O-018 (SDD-13). Tidak ada kredensial yang direkayasa.
 3. Nilai minSdk dan targetSdk melekat pada prebuilt template; bila kelak diperlukan kendali penuh (misalnya penyempitan arsitektur atau gradle build), dievaluasi pada SDD-13.
 4. Keputusan terbuka berikutnya sesuai tahap batas: O-005 dan O-006 (SDD-03), O-010 dan O-013 (SDD-04), O-012 (SDD-05).
+5. Tinjauan statis verifikasi akhir menemukan risiko kegagalan langkah penerimaan lisensi SDK pada workflow Android Build (SIGPIPE di bawah pipefail); perbaikan minimal diterapkan sesuai P-013 (disetujui pemilik proyek pada 2026-10-30).
+6. Eksekusi workflow Android Build memerlukan dispatch manual pemilik proyek; tooling verifikator tidak menyediakan kapabilitas dispatch, sehingga tidak ada klaim keberhasilan build yang dibuat.
 
 ## 9. Acceptance Status
 
@@ -121,12 +132,12 @@ Terverifikasi pada eksekusi workflow Validation, run `41002625549` (commit `57af
 | 5. Metadata versi valid. | Terpenuhi; divalidasi TF-01 dan langkah CI TF-07. |
 | 6. Automated tests benar-benar berjalan. | Terpenuhi. Test harness dieksekusi pada CI dengan hasil success (run `41002625549`). |
 | 7. Validation workflow berhasil. | Terpenuhi. Kedua job selesai success. |
-| 8. Android build menghasilkan APK debug atau kendala spesifik dilaporkan. | Menunggu eksekusi workflow Android Build oleh pemilik proyek (dispatch manual). |
+| 8. Android build menghasilkan APK debug atau kendala spesifik dilaporkan. | Menunggu eksekusi workflow Android Build oleh pemilik proyek (dispatch manual); verifikasi akhir 2026-10-30 mengonfirmasi workflow belum pernah dijalankan dan menemukan risiko kegagalan pada langkah lisensi SDK; perbaikan diterapkan sesuai P-013. |
 | 9. Dokumentasi saling konsisten. | Terpenuhi; ditinjau silang antar dokumen. |
 | 10. Tidak ada perubahan di luar scope. | Terpenuhi; tidak ada gameplay, hero, AI, lobby, atau sistem pertandingan yang diimplementasikan. |
 
 ## 10. Rekomendasi Tahap SDD Berikutnya
 
-1. Pemilik proyek menjalankan workflow Android Build secara manual, mengunduh artifact APK debug, dan melakukan MF-01 s.d. MF-03 pada perangkat nyata, lalu menetapkan acceptance SDD-01.
+1. Pemilik proyek menjalankan workflow Android Build secara manual (perbaikan penerimaan lisensi P-013 telah diterapkan), mengunduh artifact APK debug, dan melakukan MF-01 s.d. MF-05 pada perangkat nyata, lalu menetapkan acceptance SDD-01.
 2. Tahap berikutnya: SDD-02 (Core Framework). Persiapan yang disarankan: requirement dan desain layanan inti (event bus, scene router, config service, save service, state machine, object pool), dengan tetap menahan implementasi hingga spesifikasinya disetujui.
 3. Evaluasi ulang kebutuhan framework pengujian (GUT/gdUnit4) dilakukan pada requirement SDD-02 sebagaimana dicatat pada P-008.

@@ -3,7 +3,7 @@
 - Status: Approved (disetujui pemilik proyek pada 2026-10-30)
 - Sistem: Fondasi Repository, Konfigurasi, dan CI
 - Tahap roadmap terikat: SDD-01
-- Terakhir diperbarui: 2026-10-30 (hasil eksekusi CI dicatat)
+- Terakhir diperbarui: 2026-10-30 (hasil eksekusi CI dicatat; prosedur manual dirinci pada verifikasi akhir SDD-01)
 
 ## 1. Tujuan
 
@@ -46,19 +46,37 @@ Pengujian ini wajib dilakukan pemilik proyek pada perangkat Android kelas meneng
 | ID | Skenario | Langkah | Hasil yang Diharapkan |
 | --- | --- | --- | --- |
 | MF-01 | Instalasi APK debug | Unduh artifact dari eksekusi workflow Android Build; pasang pada perangkat. | APK terpasang tanpa uninstall aplikasi lain. |
-| MF-02 | Smoke test boot | Jalankan aplikasi. | Layar boot menampilkan ASTRANUSA beserta versionName dan versionCode dari `version.json`. |
+| MF-02 | Smoke test boot | Jalankan aplikasi. | Layar boot menampilkan ASTRANUSA beserta versionName dan versionCode dari `version.json` (`ASTRANUSA 0.1.0 (build 1)`). |
 | MF-03 | Orientasi | Amati tampilan. | Aplikasi tampil landscape penuh tanpa distorsi pada rasio layar perangkat. |
-| MF-04 | Catatan hasil | Isi hasil pengujian pada laporan tahap. | Hasil tercatat pada [SDD-01-FOUNDATION-REPORT](../reports/SDD-01-FOUNDATION-REPORT.md). |
+| MF-04 | Stabilitas awal | Biarkan aplikasi terbuka minimal 60 detik tanpa interaksi. | Tidak ada crash, force close, atau ANR pada 60 detik pertama. |
+| MF-05 | Performa startup | Ukur perkiraan durasi dari tap ikon hingga scene boot tampil (cold start). | Durasi dapat diterima dan dicatat; referensi informal SDD-01: di bawah 5 detik pada perangkat kelas menengah (bukan gerbang lolos keras). |
+| MF-06 | Catatan hasil | Isi hasil pengujian pada laporan tahap. | Hasil MF-01 s.d. MF-05 tercatat pada [SDD-01-FOUNDATION-REPORT](../reports/SDD-01-FOUNDATION-REPORT.md). |
+
+### 4.1 Prosedur Rinci Eksekusi Manual
+
+Prasyarat: perangkat Android kelas menengah (Android 8.0 / API 26 ke atas, arsitektur arm64-v8a atau armeabi-v7a) dan akses pemilik repository.
+
+1. Buka halaman [Actions - Android Build](https://github.com/Ndolzz/astranusa/actions/workflows/android-build.yml), pilih `Run workflow` pada branch `main`, lalu jalankan (pemicu dispatch manual sesuai P-012).
+2. Tunggu job `build-debug-apk` selesai dengan status success (batas 40 menit).
+3. Unduh artifact `astranusa-debug-apk` dari halaman eksekusi (retensi 14 hari); ekstrak `astranusa-debug.apk` dan `release-notes.md`.
+4. MF-01: pasang APK pada perangkat (salin berkas lalu izinkan instalasi dari sumber tidak dikenal bila diminta, atau gunakan `adb install astranusa-debug.apk`).
+5. MF-02: buka aplikasi dari launcher; pastikan scene boot tampil dengan teks `ASTRANUSA 0.1.0 (build 1)`.
+6. MF-03: amati orientasi landscape dan ketiadaan distorsi pada rasio layar perangkat.
+7. MF-04: biarkan aplikasi terbuka 60 detik; pastikan tidak ada crash atau dialog force close.
+8. MF-05: catat perkiraan durasi cold start dari tap ikon hingga scene boot tampil.
+9. MF-06: catat hasil MF-01 s.d. MF-05 pada [SDD-01-FOUNDATION-REPORT](../reports/SDD-01-FOUNDATION-REPORT.md).
 
 ## 5. Kriteria Lolos
 
 1. Seluruh pengujian otomatis TF-01 s.d. TF-08 lolos pada CI dengan bukti eksekusi workflow.
 2. WF-01 dan WF-02 selesai success dengan artifact APK tersedia.
-3. MF-01 s.d. MF-03 dinyatakan lolos oleh pemilik proyek.
+3. MF-01 s.d. MF-05 dinyatakan lolos oleh pemilik proyek.
 
 ## 6. Hasil
 
-Bukti eksekusi: [Validation run 41002625549](https://github.com/Ndolzz/astranusa/actions/runs/41002625549) pada commit `57af8c7` (2026-10-30).
+Bukti eksekusi: [Validation run 41002625549](https://github.com/Ndolzz/astranusa/actions/runs/41002625549) pada commit `57af8c7` (2026-10-30); verifikasi akhir pada HEAD `16fe5bf` dikonfirmasi oleh eksekusi Validation run #2 yang selesai success (2026-10-30).
+
+Verifikasi akhir SDD-01 (2026-10-30): halaman Actions mengonfirmasi workflow Android Build belum memiliki eksekusi (nol run), sehingga WF-02 dan WF-03 tetap menunggu dispatch manual. Tinjauan statis menemukan risiko kegagalan langkah penerimaan lisensi SDK (`yes | sdkmanager --licenses` exit 141 di bawah `set -o pipefail`); temuan dan mitigasinya dicatat pada [CI-PIPELINE-SPEC](../specifications/CI-PIPELINE-SPEC.md) bagian 10 (P-013).
 
 | ID | Status | Catatan |
 | --- | --- | --- |
@@ -67,8 +85,8 @@ Bukti eksekusi: [Validation run 41002625549](https://github.com/Ndolzz/astranusa
 | TF-07 | Lolos | Step `Validate version metadata against previous release` selesai success (baseline 0). |
 | TF-08 | Menunggu | Dieksekusi pada workflow Android Build. |
 | WF-01 | Lolos | Kedua job Validation selesai success. |
-| WF-02, WF-03 | Menunggu dispatch manual | Pemilik proyek menjalankan workflow Android Build melalui halaman Actions. |
-| MF-01 s.d. MF-04 | Menunggu pengujian pemilik proyek | Memerlukan perangkat Android nyata. |
+| WF-02, WF-03 | Menunggu dispatch manual | Pemilik proyek menjalankan workflow Android Build melalui halaman Actions; verifikasi akhir mengonfirmasi belum ada eksekusi. |
+| MF-01 s.d. MF-06 | Menunggu pengujian pemilik proyek | Memerlukan perangkat Android nyata; MF-04 dan MF-05 ditambahkan pada verifikasi akhir. |
 
 ## 7. Referensi
 

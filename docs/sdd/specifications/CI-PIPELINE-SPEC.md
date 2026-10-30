@@ -3,7 +3,7 @@
 - Status: Approved (disetujui pemilik proyek pada 2026-10-30)
 - Sistem: Continuous Integration dan Delivery
 - Tahap roadmap terikat: SDD-01; mengikat seluruh tahap berikutnya
-- Terakhir diperbarui: 2026-10-30
+- Terakhir diperbarui: 2026-10-30 (risiko kegagalan penerimaan lisensi SDK tercatat pada verifikasi akhir SDD-01)
 
 ## 1. Tujuan
 
@@ -52,7 +52,7 @@ Job `validate`:
 
 1. Checkout repository.
 2. Pasang JDK Temurin 17 dan Android SDK (cmdline-tools).
-3. Pasang komponen SDK terkunci: `platform-tools`, `platforms;android-35`, `build-tools;35.0.1`.
+3. Pasang komponen SDK terkunci: `platform-tools`, `platforms;android-35`, `build-tools;35.0.1`; lisensi SDK diterima oleh action setup-android (P-013).
 4. Unduh export template Godot 4.7.2 (di-cache antar eksekusi berdasarkan versi template) dan editor 4.7.2-stable.
 5. `godot --headless --import` pada `game/`.
 6. Buat keystore debug standar Android per eksekusi (kredensial debug publik bawaan; bukan rahasia).
@@ -102,6 +102,7 @@ Job `validate`:
 | --- | --- |
 | Nilai minSdk dan targetSdk melekat pada template bawaan (prebuilt). | Dokumentasi eksplisit pada GODOT-CONFIGURATION-SPEC; verifikasi manifest pada langkah verifikasi APK; opsi gradle build dievaluasi pada SDD-13. |
 | `aapt` tidak tersedia pada build-tools tertentu. | Langkah verifikasi beralih ke `aapt2` bila `aapt` tidak ditemukan. |
+| `yes \| sdkmanager --licenses` exit 141 (SIGPIPE) di bawah `set -o pipefail` pada langkah instalasi komponen SDK; `yes` menerima SIGPIPE ketika `sdkmanager` menutup stdin sehingga langkah gagal meskipun penerimaan lisensi berhasil. Ditemukan melalui tinjauan statis verifikasi akhir SDD-01 (2026-10-30) sebelum eksekusi pertama workflow. | Pipeline `yes` dihapus dan lisensi diterima secara eksplisit melalui input `accept-android-sdk-licenses: true` pada `android-actions/setup-android` v3 (P-013). Tidak ada perubahan versi toolchain. |
 | Rilis lama tanpa aset `version.json`. | Workflow gagal dengan pesan eksplisit; konvensi aset rilis ditetapkan sejak rilis pertama. |
 
 ## 11. Acceptance Criteria
@@ -120,4 +121,4 @@ Status acceptance diperbarui pada [SDD-01-FOUNDATION-REPORT](../reports/SDD-01-F
 - [GODOT-CONFIGURATION-SPEC](GODOT-CONFIGURATION-SPEC.md)
 - [REPOSITORY-STRUCTURE-SPEC](REPOSITORY-STRUCTURE-SPEC.md)
 - [FOUNDATION-TEST-PLAN](../verification/FOUNDATION-TEST-PLAN.md)
-- [Decision Log](../../DECISION_LOG.md): P-004, P-007, P-011, P-012, O-018
+- [Decision Log](../../DECISION_LOG.md): P-004, P-007, P-011, P-012, P-013, O-018
