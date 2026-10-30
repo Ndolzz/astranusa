@@ -1,0 +1,127 @@
+name: Android Build
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+env:
+  GODOT_RELEASE: "4.7.2-stable"
+  GODOT_ARCHIVE: "Godot_v4.7.2-stable_linux.x86_64.zip"
+  GODOT_BINARY: "Godot_v4.7.2-stable_linux.x86_64"
+  GODOT_TEMPLATES_ARCHIVE: "Godot_v4.7.2-stable_export_templates.tpz"
+  GODOT_TEMPLATE_DIR: "4.7.2.stable"
+  ANDROID_BUILD_TOOLS: "35.0.1"
+  ANDROID_PLATFORM: "android-35"
+  EXPECTED_APPLICATION_ID: "com.ndolzz.astranusa"
+
+jobs:
+  build-debug-apk:
+    name: Export and verify debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup JDK 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Install pinned Android SDK components
+        run: |
+          set -euo pipefail
+          yes | sdkmanager --licenses > /dev/null
+          sdkmanager --install "platform-tools" "platforms;${ANDROID_PLATFORM}" "build-tools;${ANDROID_BUILD_TOOLS}" > /dev/null
+      - name: Cache Godot export templates
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/godot/export_templates
+          key: godot-export-templates-${{ env.GODOT_TEMPLATE_DIR }}
+      - name: Download Godot editor and export templates (pinned)
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.local/share/godot/export_templates"
+          if [ ! -d "$HOME/.local/share/godot/export_templates/${GODOT_TEMPLATE_DIR}" ]; then
+            curl -fsSL -o templates.tpz \
+              "https://github.com/godotengine/godot/releases/download/${GODOT_RELEASE}/${GODOT_TEMPLATES_ARCHIVE}"
+            unzip -q templates.tpz -d templates_extracted
+            mv templates_extracted/templates "$HOME/.local/share/godot/export_templates/${GODOT_TEMPLATE_DIR}"
+          fi
+          curl -fsSL -o godot.zip \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_RELEASE}/${GODOT_ARCHIVE}"
+          unzip -q godot.zip
+          mv "${GODOT_BINARY}" godot
+          chmod +x godot
+          ./godot --version
+      - name: Import project resources
+        working-directory: game
+        run: ../godot --headless --import
+      - name: Generate standard Android debug keystore
+        run: |
+          keytool -genkeypair \
+            -keystore "$GITHUB_WORKSPACE/debug.keystore" \
+            -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10950 \
+            -storepass android -keypass android \
+            -dname "CN=Android Debug,O=Android,C=US"
+      - name: Sync version metadata into export preset
+        working-directory: game
+        run: ../godot --headless --script res://tools/apply_version.gd
+        env:
+          ASTRANUSA_DEBUG_KEYSTORE: ${{ github.workspace }}/debug.keystore
+      - name: Export debug APK
+        working-directory: game
+        run: ../godot --headless --export-debug "Android Debug" build/astranusa-debug.apk
+      - name: Verify APK identity and version
+        run: |
+          set -euo pipefail
+          apk="game/build/astranusa-debug.apk"
+          if [ ! -f "$apk" ]; then
+            echo "::error::APK tidak dihasilkan oleh export"
+            exit 1
+          fi
+          unzip -t "$apk" > /dev/null
+          aapt="$ANDROID_HOME/build-tools/${ANDROID_BUILD_TOOLS}/aapt"
+          if [ ! -x "$aapt" ]; then
+            aapt="$ANDROID_HOME/build-tools/${ANDROID_BUILD_TOOLS}/aapt2"
+          fi
+          expected_code=$(jq -r '.versionCode' game/version.json)
+          expected_name=$(jq -r '.versionName' game/version.json)
+          badging=$("$aapt" dump badging "$apk")
+          echo "$badging" | head -n 3
+          package_line=$(echo "$badging" | grep -m 1 "^package:")
+          echo "$package_line" | grep -q "name='${EXPECTED_APPLICATION_ID}'" \
+            || { echo "::error::applicationId APK tidak sesuai ${EXPECTED_APPLICATION_ID}"; exit 1; }
+          echo "$package_line" | grep -q "versionCode='${expected_code}'" \
+            || { echo "::error::versionCode APK tidak sesuai version.json (${expected_code})"; exit 1; }
+          echo "$package_line" | grep -q "versionName='${expected_name}'" \
+            || { echo "::error::versionName APK tidak sesuai version.json (${expected_name})"; exit 1; }
+          echo "$badging" | grep -q "arm64-v8a" \
+            || { echo "::error::APK tidak memuat arsitektur arm64-v8a"; exit 1; }
+          echo "$badging" | grep -q "armeabi-v7a" \
+            || { echo "::error::APK tidak memuat arsitektur armeabi-v7a"; exit 1; }
+          echo "Verifikasi APK lolos: applicationId=${EXPECTED_APPLICATION_ID} versionCode=${expected_code} versionName=${expected_name}"
+      - name: Prepare release notes from CHANGELOG
+        run: |
+          mkdir -p game/build
+          awk '/^## /{if (started) exit; started=1} started' CHANGELOG.md > game/build/release-notes.md
+          cat game/build/release-notes.md
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: astranusa-debug-apk
+          path: |
+            game/build/astranusa-debug.apk
+            game/build/release-notes.md
+          retention-days: 14
+          if-no-files-found: error
+
+# Catatan signing rilis (arsitektur, tidak aktif):
+# Build produksi ditandatangani dengan satu keystore produksi yang disimpan sebagai
+# GitHub Secrets ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, dan
+# ANDROID_KEY_PASSWORD (APK-COMPATIBILITY-SPEC bagian 9). Job signing rilis
+# sengaja belum ditambahkan hingga keystore produksi tersedia dan keputusan O-018
+# selesai pada SDD-13. Tidak ada kredensial yang dibuat atau dibocorkan di sini.

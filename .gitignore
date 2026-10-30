@@ -2,7 +2,8 @@
 .godot/
 *.translation
 
-# Android build output
+# Godot export output
+build/
 android/build/
 *.apk
 *.aab

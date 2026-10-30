@@ -1,0 +1,88 @@
+name: Validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: validation-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GODOT_RELEASE: "4.7.2-stable"
+  GODOT_ARCHIVE: "Godot_v4.7.2-stable_linux.x86_64.zip"
+  GODOT_BINARY: "Godot_v4.7.2-stable_linux.x86_64"
+  GDTOOLKIT_VERSION: "4.5.0"
+
+jobs:
+  lint:
+    name: Lint GDScript (gdlint)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install gdlint (gdtoolkit pinned)
+        run: python -m pip install --no-cache-dir "gdtoolkit==${GDTOOLKIT_VERSION}"
+      - name: Run gdlint
+        working-directory: game
+        run: gdlint src tools tests
+
+  validate:
+    name: Validate project and run foundation tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Download Godot editor (pinned)
+        run: |
+          set -euo pipefail
+          curl -fsSL -o godot.zip \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_RELEASE}/${GODOT_ARCHIVE}"
+          unzip -q godot.zip
+          mv "${GODOT_BINARY}" godot
+          chmod +x godot
+          ./godot --version
+      - name: Import project resources
+        working-directory: game
+        run: ../godot --headless --import
+      - name: Run foundation tests
+        working-directory: game
+        run: ../godot --headless --script res://tests/foundation_tests.gd
+      - name: Validate version metadata against previous release
+        working-directory: game
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          code=$(jq -r '.versionCode' version.json)
+          name=$(jq -r '.versionName' version.json)
+          if ! [[ "$code" =~ ^[0-9]+$ ]] || [ "$code" -le 0 ]; then
+            echo "::error file=game/version.json::versionCode harus bilangan bulat positif (diperoleh: ${code})"
+            exit 1
+          fi
+          if ! [[ "$name" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error file=game/version.json::versionName harus mengikuti semantic versioning MAJOR.MINOR.PATCH (diperoleh: ${name})"
+            exit 1
+          fi
+          baseline=0
+          latest=$(gh api "repos/${GITHUB_REPOSITORY}/releases/latest" 2>/dev/null || true)
+          latest_tag=$(echo "$latest" | jq -r '.tag_name // empty')
+          if [ -n "$latest_tag" ]; then
+            asset_url=$(echo "$latest" | jq -r '.assets[]? | select(.name == "version.json") | .url' | head -n 1)
+            if [ -z "$asset_url" ]; then
+              echo "::error::Rilis terakhir tidak memiliki aset version.json (lihat CI-PIPELINE-SPEC)"
+              exit 1
+            fi
+            baseline=$(gh api -H "Accept: application/octet-stream" "$asset_url" | jq -r '.versionCode')
+          fi
+          if [ "$code" -le "$baseline" ]; then
+            echo "::error file=game/version.json::versionCode ${code} tidak meningkat dari rilis sebelumnya (${baseline})"
+            exit 1
+          fi
+          echo "Metadata versi valid: ${name} (versionCode ${code} > baseline ${baseline})"

@@ -1,6 +1,6 @@
 # ASTRANUSA
 
-ASTRANUSA adalah game MOBA 5v5 offline melawan AI bot dengan inspirasi mitologi, legenda, dan budaya Nusantara. Proyek ini dikembangkan dengan Godot 4 untuk platform Android, menggunakan pendekatan Spec-Driven Development (SDD).
+ASTRANUSA adalah game MOBA 5v5 offline melawan AI bot dengan inspirasi mitologi, legenda, dan budaya Nusantara. Proyek ini dikembangkan dengan Godot 4.7.2 untuk platform Android, menggunakan pendekatan Spec-Driven Development (SDD).
 
 ## Status Proyek
 
@@ -8,6 +8,7 @@ ASTRANUSA adalah game MOBA 5v5 offline melawan AI bot dengan inspirasi mitologi,
 | --- | --- | --- |
 | SDD-00 | Project Foundation | Accepted (2026-10-30) |
 | SPEC Batch | Update System & Data Persistence | Approved (2026-10-30) |
+| SDD-01 | Repository & CI Foundation | In Progress (2026-10-30) |
 
 ## Dokumentasi
 
@@ -16,7 +17,8 @@ ASTRANUSA adalah game MOBA 5v5 offline melawan AI bot dengan inspirasi mitologi,
 - [Decision Log](docs/DECISION_LOG.md) — daftar keputusan teknis beserta status keputusan terbuka.
 - [Roadmap](docs/ROADMAP.md) — tahapan implementasi bertahap dari fondasi hingga release candidate.
 - [Proses SDD](docs/sdd/README.md) — metodologi, struktur dokumentasi, dan aturan gerbang tahapan.
-- [Laporan Tahap](docs/sdd/reports/SDD-00-report.md) — laporan pekerjaan tahap SDD-00.
+- [Changelog](CHANGELOG.md) — catatan perubahan versi.
+- [Laporan Tahap](docs/sdd/reports/SDD-01-FOUNDATION-REPORT.md) — laporan pekerjaan tahap SDD-01.
 
 ## Spesifikasi Sistem
 
@@ -24,7 +26,11 @@ ASTRANUSA adalah game MOBA 5v5 offline melawan AI bot dengan inspirasi mitologi,
 - [DATA-MIGRATION-SPEC](docs/sdd/specifications/DATA-MIGRATION-SPEC.md) — migrasi schema data antar versi.
 - [UPDATE-SYSTEM-SPEC](docs/sdd/specifications/UPDATE-SYSTEM-SPEC.md) — alur pembaruan aplikasi dan pengelolaan aset.
 - [APK-COMPATIBILITY-SPEC](docs/sdd/specifications/APK-COMPATIBILITY-SPEC.md) — identitas paket, versi, signing, dan workflow build APK.
+- [REPOSITORY-STRUCTURE-SPEC](docs/sdd/specifications/REPOSITORY-STRUCTURE-SPEC.md) — struktur repository dan proyek Godot.
+- [GODOT-CONFIGURATION-SPEC](docs/sdd/specifications/GODOT-CONFIGURATION-SPEC.md) — konfigurasi proyek Godot dan export Android.
+- [CI-PIPELINE-SPEC](docs/sdd/specifications/CI-PIPELINE-SPEC.md) — pipeline validasi dan build APK.
 - [UPDATE-TEST-PLAN](docs/sdd/verification/UPDATE-TEST-PLAN.md) — skenario pengujian pembaruan dan persistensi data.
+- [FOUNDATION-TEST-PLAN](docs/sdd/verification/FOUNDATION-TEST-PLAN.md) — skenario pengujian fondasi SDD-01.
 
 ## Prinsip Pengembangan
 
@@ -39,6 +45,7 @@ ASTRANUSA adalah game MOBA 5v5 offline melawan AI bot dengan inspirasi mitologi,
 ```
 astranusa/
 ├── README.md
+├── CHANGELOG.md
 ├── .gitignore
 ├── docs/                     # Dokumentasi SDD
 │   ├── PROJECT_OVERVIEW.md
@@ -47,7 +54,14 @@ astranusa/
 │   ├── ROADMAP.md
 │   ├── sdd/                  # Proses, laporan tahap, spesifikasi, dan arsip SDD
 │   └── templates/            # Template dokumen SDD
-├── game/                     # Root proyek Godot 4 (diinisialisasi pada SDD-01)
+├── game/                     # Root proyek Godot 4.7.2
+│   ├── project.godot
+│   ├── version.json          # Sumber kebenaran versi
+│   ├── export_presets.cfg   # Preset export Android
+│   ├── assets/               # Aset game
+│   ├── src/                  # Kode sumber (core, app, data, simulation, presentation)
+│   ├── tests/                # Test harness dan pengujian otomatis
+│   └── tools/                # Skrip headless untuk CI
 └── .github/
-    └── workflows/            # Workflow CI/CD (diimplementasikan pada SDD-01)
+    └── workflows/            # validation.yml dan android-build.yml
 ```

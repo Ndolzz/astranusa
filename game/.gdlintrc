@@ -1,0 +1,3 @@
+# Konfigurasi gdlint (gdtoolkit 4.5.0) — keputusan P-011.
+# Nilai dijaga sama dengan default agar hasil lint deterministik lintas mesin.
+max-line-length: 100

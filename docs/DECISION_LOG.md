@@ -14,7 +14,7 @@ Status yang digunakan:
 
 - Status: Accepted.
 - Konteks: Proyek membutuhkan engine open source, mendukung export Android, dan dapat berjalan headless untuk CI.
-- Konsekuensi: Seluruh pengembangan menggunakan Godot 4; versi minor dikunci pada SDD-01 (terkait O-001).
+- Konsekuensi: Seluruh pengembangan menggunakan Godot 4; versi minor dikunci pada SDD-01 (terkait O-001, diselesaikan oleh P-007).
 
 ### D-002 — Bahasa pemrograman: GDScript
 
@@ -32,7 +32,7 @@ Status yang digunakan:
 
 - Status: Accepted.
 - Konteks: Sesuai target rilis proyek.
-- Konsekuensi: Desain UI berorientasi layar sentuh; versi Android minimum ditetapkan pada SDD-01 (terkait O-008).
+- Konsekuensi: Desain UI berorientasi layar sentuh; baseline perangkat ditetapkan pada P-009.
 
 ### D-005 — Version control dan CI/CD: Git, GitHub, GitHub Actions
 
@@ -86,20 +86,58 @@ Status yang digunakan:
 - Konteks: Amplop `schema_version`, `app_version_written`, checksum SHA-256, dan penulisan atomik memberi fondasi migrasi dan pemulihan yang aman tanpa kompleksitas format binary.
 - Konsekuensi: Data pemain mudah diperiksa dan diuji; checksum mendeteksi kerusakan; sisa lingkup proteksi anti-manipulasi tingkat lanjut tetap pada O-009.
 
+## Bagian 2C: Keputusan yang Diusulkan pada SDD-01 (disetujui pemilik proyek pada 2026-10-30)
+
+### P-007 — Versi Godot dikunci pada 4.7.2-stable
+
+- Status: Accepted (disetujui pemilik proyek pada 2026-10-30).
+- Konteks: O-001 mengharuskan versi stabil terbaru yang sudah teruji untuk pipeline Android. Godot 4.7.2-stable (18 Agustus 2026) adalah rilis pemeliharaan kedua seri 4.7; Godot 4.8 masih berstatus beta sehingga tidak dipakai untuk produksi.
+- Konsekuensi: Editor dan export template 4.7.2 dikunci pada CI dan dokumentasi; `config/features` memuat `4.7`; perubahan versi berikutnya melewati Decision Log. Keputusan ini menyelesaikan O-001.
+
+### P-008 — Test harness kustom headless untuk pengujian fondasi
+
+- Status: Accepted (disetujui pemilik proyek pada 2026-10-30).
+- Konteks: O-002 menimbang GUT, gdUnit4, atau harness kustom. Pada tahap fondasi, assertion berbasis skrip headless tanpa addon cukup, menghindari dependensi vendored dan menjaga repository ringan.
+- Konsekuensi: `game/tests/foundation_tests.gd` menjadi harness dengan assertion nyata dan kode keluar bukan nol saat gagal; kebutuhan framework pengujian dievaluasi ulang pada requirement SDD-02. Keputusan ini menyelesaikan O-002.
+
+### P-009 — Baseline perangkat Android: minSdk 24, kelas QA Android 8.0+, dua arsitektur
+
+- Status: Accepted (disetujui pemilik proyek pada 2026-10-30).
+- Konteks: O-008 menimbang Android 8.0 sebagai kandidat minimum. Batas bawaan export template Godot 4.7 adalah minSdk 24 (Android 7.0) dan targetSdk 36; menetapkan minSdk di bawah kemampuan template memerlukan gradle build yang memperberat CI pada tahap fondasi.
+- Konsekuensi: Kelas perangkat yang dijamin dan diuji adalah Android 8.0 (API 26) kelas menengah ke atas; perangkat Android 7 dapat memasang aplikasi tetapi tidak dijamin. APK debug memuat arm64-v8a dan armeabi-v7a agar dapat diuji pada berbagai perangkat yang tersedia. Keputusan ini menyelesaikan O-008.
+
+### P-010 — Orientasi landscape dengan viewport 1280x720 dan stretch canvas_items/expand
+
+- Status: Accepted (disetujui pemilik proyek pada 2026-10-30).
+- Konteks: MOBA memerlukan bidang pandang horizontal yang lebar; 1280x720 adalah basis desain UI yang lazim untuk perangkat kelas menengah; mode `canvas_items` dengan aspek `expand` menoleransi rasio layar dan notch yang berbeda.
+- Konsekuensi: Seluruh UI dirancang pada basis 1280x720 landscape; pengujian rasio non-16:9 dimulai pada tahap UI (SDD-04).
+
+### P-011 — Tooling lint: gdtoolkit 4.5.0
+
+- Status: Accepted (disetujui pemilik proyek pada 2026-10-30).
+- Konteks: O-003 menimbang godot-gdscript-toolkit atau pemeriksaan kustom. gdtoolkit adalah standar de facto lint dan format GDScript Godot 4, berjalan tanpa editor, dan versinya dapat dikunci tepat pada CI.
+- Konsekuensi: `gdlint` 4.5.0 dijalankan pada CI untuk `src`, `tools`, dan `tests`; konfigurasi pada `game/.gdlintrc`. Keputusan ini menyelesaikan O-003.
+
+### P-012 — Komposisi CI: dua workflow terpisah sesuai tanggung jawab
+
+- Status: Accepted (disetujui pemilik proyek pada 2026-10-30).
+- Konteks: O-004 menimbang lima workflow terpisah atau satu workflow multi-job. Validasi harus cepat pada setiap perubahan, sementara build APK hanya dijalankan saat diminta agar riwayat Actions ringkas dan artifact terkendali.
+- Konsekuensi: `validation.yml` berjalan pada push dan pull request ke `main` (lint, import, test harness, validasi versi); `android-build.yml` berjalan pada dispatch manual dan tag `v*` (export APK debug, verifikasi identitas, artifact). Validasi data konfigurasi bergabung ke Validation mulai SDD-03. Keputusan ini menyelesaikan O-004.
+
 ## Bagian 3: Keputusan Terbuka
 
 Setiap keputusan terbuka mencantumkan tahap batas: keputusan harus dibuat sebelum tahap tersebut dimulai. Tidak boleh ada asumsi yang menggantikan keputusan terbuka.
 
 | ID | Keputusan yang Harus Dibuat | Pilihan yang Dipertimbangkan | Batas |
 | --- | --- | --- | --- |
-| O-001 | Versi Godot 4 spesifik yang dikunci untuk pengembangan dan CI. | Versi stabil terbaru saat SDD-01 versus versi yang sudah teruji untuk export Android. | SDD-01 |
-| O-002 | Framework pengujian GDScript. | GUT, gdUnit4, atau test harness kustom berbasis skrip headless. | SDD-01 |
-| O-003 | Tooling lint dan format kode GDScript. | godot-gdscript-toolkit (gdlint, gdformat) atau pemeriksaan kustom. | SDD-01 |
-| O-004 | Komposisi workflow CI (dipisah per tujuan atau digabung dengan jobs). | Lima workflow terpisah versus satu workflow multi-job. | SDD-01 |
+| O-001 | Versi Godot 4 spesifik yang dikunci untuk pengembangan dan CI. Diselesaikan oleh P-007 (Godot 4.7.2-stable). | — | Selesai |
+| O-002 | Framework pengujian GDScript. Diselesaikan oleh P-008 (test harness kustom headless). | — | Selesai |
+| O-003 | Tooling lint dan format kode GDScript. Diselesaikan oleh P-011 (gdtoolkit 4.5.0). | — | Selesai |
+| O-004 | Komposisi workflow CI. Diselesaikan oleh P-012 (dua workflow terpisah). | — | Selesai |
 | O-005 | Pembagian rinci format data: data mana yang JSON dan data mana yang Godot Resources. | JSON untuk seluruh data balance versus pembagian per jenis entitas. | SDD-03 |
 | O-006 | Mekanisme validasi skema konfigurasi. | Validator GDScript headless versus JSON Schema dengan tool eksternal. | SDD-03 |
 | O-007 | Teknik inti AI: behavior tree, utility system, atau hibrida berlapis. | Behavior tree, utility AI, atau kombinasi keduanya per lapisan. | SDD-08 |
-| O-008 | Versi Android minimum dan kelas perangkat target beserta definisi perangkat kelas bawah. | Android 8.0 sebagai kandidat minimum; kelas menengah sebagai target utama. | SDD-01 |
+| O-008 | Versi Android minimum dan kelas perangkat target. Diselesaikan oleh P-009 (minSdk 24, kelas QA Android 8.0+, arm64-v8a dan armeabi-v7a). | — | Selesai |
 | O-009 | Sisa lingkup: proteksi anti-manipulasi tingkat lanjut untuk data rank (format penyimpanan diselesaikan oleh P-006). | Checksum SHA-256 (P-006) versus penandatanganan lokal; cakupan dievaluasi pada SDD-10. | SDD-10 |
 | O-010 | Pipeline aset 3D: sumber, format, standar penamaan, dan kebijakan lisensi aset. | Aset orisinal versus aset berlisensi; format glTF sebagai kandidat utama. | SDD-04 |
 | O-011 | Implementasi mekanisme concealment rumput. | Deteksi area berbasis shape versus grid; aturan visibilitas per unit. | SDD-07 |
@@ -117,5 +155,5 @@ Setiap keputusan terbuka mencantumkan tahap batas: keputusan harus dibuat sebelu
 ## Aturan Pemutusan Keputusan
 
 1. Keputusan terbuka diputuskan pada tahap requirement atau technical design dari tahap batasnya, bukan pada tahap implementation.
-2. Setiap keputusan yang dipilih dipromosikan ke Bagian 1, 2, atau 2B dengan konteks dan konsekuensi.
+2. Setiap keputusan yang dipilih dipromosikan ke Bagian 1, 2, 2B, atau 2C dengan konteks dan konsekuensi.
 3. Keputusan yang dibatalkan tidak dihapus; statusnya diubah menjadi `Rejected` dengan alasan.
