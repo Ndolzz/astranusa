@@ -3,7 +3,7 @@
 - Status: Approved (disetujui pemilik proyek pada 2026-10-30)
 - Sistem: Continuous Integration dan Delivery
 - Tahap roadmap terikat: SDD-01; mengikat seluruh tahap berikutnya
-- Terakhir diperbarui: 2026-10-30 (risiko kegagalan penerimaan lisensi SDK tercatat pada verifikasi akhir SDD-01)
+- Terakhir diperbarui: 2026-10-30 (risiko kegagalan penerimaan lisensi SDK dan upgrade setup-android v4 tercatat pada verifikasi akhir SDD-01)
 
 ## 1. Tujuan
 
@@ -80,7 +80,7 @@ Job `validate`:
 | Android platform | android-35 |
 | gdtoolkit (gdlint) | 4.5.0 |
 | actions/checkout, setup-python, setup-java, cache, upload-artifact | v4, v5, v4, v4, v4 |
-| android-actions/setup-android | v3 |
+| android-actions/setup-android | v4 (v4.0.4; P-014) |
 
 ## 9. Arsitektur Signing Rilis (Dokumentasi; Tidak Aktif)
 
@@ -103,6 +103,7 @@ Job `validate`:
 | Nilai minSdk dan targetSdk melekat pada template bawaan (prebuilt). | Dokumentasi eksplisit pada GODOT-CONFIGURATION-SPEC; verifikasi manifest pada langkah verifikasi APK; opsi gradle build dievaluasi pada SDD-13. |
 | `aapt` tidak tersedia pada build-tools tertentu. | Langkah verifikasi beralih ke `aapt2` bila `aapt` tidak ditemukan. |
 | `yes \| sdkmanager --licenses` exit 141 (SIGPIPE) di bawah `set -o pipefail` pada langkah instalasi komponen SDK; `yes` menerima SIGPIPE ketika `sdkmanager` menutup stdin sehingga langkah gagal meskipun penerimaan lisensi berhasil. Ditemukan melalui tinjauan statis verifikasi akhir SDD-01 (2026-10-30) sebelum eksekusi pertama workflow. | Pipeline `yes` dihapus dan lisensi diterima secara eksplisit melalui input `accept-android-sdk-licenses: true` pada `android-actions/setup-android` v3 (P-013). Tidak ada perubahan versi toolchain. |
+| `android-actions/setup-android` v3 memasang paket legacy `tools` yang telah dihapus Google dari repositori SDK; action gagal sebelum kode proyek tersentuh (dikonfirmasi pada eksekusi pertama run `41003932265`, gagal 13 detik). | Upgrade ke v4 sesuai P-014: default paket hanya `platform-tools`, native Node 24, input `accept-android-sdk-licenses` tetap tersedia. |
 | Rilis lama tanpa aset `version.json`. | Workflow gagal dengan pesan eksplisit; konvensi aset rilis ditetapkan sejak rilis pertama. |
 
 ## 11. Acceptance Criteria
@@ -121,4 +122,4 @@ Status acceptance diperbarui pada [SDD-01-FOUNDATION-REPORT](../reports/SDD-01-F
 - [GODOT-CONFIGURATION-SPEC](GODOT-CONFIGURATION-SPEC.md)
 - [REPOSITORY-STRUCTURE-SPEC](REPOSITORY-STRUCTURE-SPEC.md)
 - [FOUNDATION-TEST-PLAN](../verification/FOUNDATION-TEST-PLAN.md)
-- [Decision Log](../../DECISION_LOG.md): P-004, P-007, P-011, P-012, P-013, O-018
+- [Decision Log](../../DECISION_LOG.md): P-004, P-007, P-011, P-012, P-013, P-014, O-018

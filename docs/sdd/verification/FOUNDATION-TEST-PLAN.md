@@ -76,7 +76,7 @@ Prasyarat: perangkat Android kelas menengah (Android 8.0 / API 26 ke atas, arsit
 
 Bukti eksekusi: [Validation run 41002625549](https://github.com/Ndolzz/astranusa/actions/runs/41002625549) pada commit `57af8c7` (2026-10-30); verifikasi akhir pada HEAD `16fe5bf` dikonfirmasi oleh eksekusi Validation run #2 yang selesai success (2026-10-30).
 
-Verifikasi akhir SDD-01 (2026-10-30): halaman Actions mengonfirmasi workflow Android Build belum memiliki eksekusi (nol run), sehingga WF-02 dan WF-03 tetap menunggu dispatch manual. Tinjauan statis menemukan risiko kegagalan langkah penerimaan lisensi SDK (`yes | sdkmanager --licenses` exit 141 di bawah `set -o pipefail`); temuan dan mitigasinya dicatat pada [CI-PIPELINE-SPEC](../specifications/CI-PIPELINE-SPEC.md) bagian 10 (P-013).
+Verifikasi akhir SDD-01 (2026-10-30): halaman Actions mengonfirmasi workflow Android Build belum memiliki eksekusi (nol run), sehingga WF-02 dan WF-03 tetap menunggu dispatch manual. Tinjauan statis menemukan risiko kegagalan langkah penerimaan lisensi SDK (`yes | sdkmanager --licenses` exit 141 di bawah `set -o pipefail`); temuan dan mitigasinya dicatat pada [CI-PIPELINE-SPEC](../specifications/CI-PIPELINE-SPEC.md) bagian 10 (P-013). Percobaan dispatch pertama (run `41003932265`) kemudian gagal pada langkah setup SDK karena kerusakan upstream `android-actions/setup-android` v3; perbaikan dicatat sebagai P-014.
 
 | ID | Status | Catatan |
 | --- | --- | --- |
@@ -85,7 +85,7 @@ Verifikasi akhir SDD-01 (2026-10-30): halaman Actions mengonfirmasi workflow And
 | TF-07 | Lolos | Step `Validate version metadata against previous release` selesai success (baseline 0). |
 | TF-08 | Menunggu | Dieksekusi pada workflow Android Build. |
 | WF-01 | Lolos | Kedua job Validation selesai success. |
-| WF-02, WF-03 | Menunggu dispatch manual | Pemilik proyek menjalankan workflow Android Build melalui halaman Actions; verifikasi akhir mengonfirmasi belum ada eksekusi. |
+| WF-02, WF-03 | Gagal pada percobaan pertama | Dispatch manual pemilik proyek (run `41003932265`) gagal pada langkah setup SDK karena kerusakan upstream `android-actions/setup-android` v3; perbaikan P-014 diterapkan; menunggu dispatch ulang. |
 | MF-01 s.d. MF-06 | Menunggu pengujian pemilik proyek | Memerlukan perangkat Android nyata; MF-04 dan MF-05 ditambahkan pada verifikasi akhir. |
 
 ## 7. Referensi

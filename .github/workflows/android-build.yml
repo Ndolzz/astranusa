@@ -17,6 +17,7 @@ env:
   EXPECTED_APPLICATION_ID: "com.ndolzz.astranusa"
 
 jobs:
+
   build-debug-apk:
     name: Export and verify debug APK
     runs-on: ubuntu-latest
@@ -30,7 +31,7 @@ jobs:
           distribution: temurin
           java-version: "17"
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
         with:
           accept-android-sdk-licenses: true
       - name: Install pinned Android SDK components
