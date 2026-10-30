@@ -1,0 +1,21 @@
+# Godot 4 generated cache
+.godot/
+*.translation
+
+# Android build output
+android/build/
+*.apk
+*.aab
+
+# Export credentials (tidak boleh masuk version control)
+export_credentials.cfg
+*.keystore
+*.jks
+
+# Sistem operasi
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/
