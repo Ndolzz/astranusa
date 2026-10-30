@@ -7,6 +7,7 @@ ASTRANUSA adalah game MOBA 5v5 offline melawan AI bot dengan inspirasi mitologi,
 | Tahap | Deskripsi | Status |
 | --- | --- | --- |
 | SDD-00 | Project Foundation | Accepted (2026-10-30) |
+| SPEC Batch | Update System & Data Persistence | Approved (2026-10-30) |
 
 ## Dokumentasi
 
@@ -16,6 +17,14 @@ ASTRANUSA adalah game MOBA 5v5 offline melawan AI bot dengan inspirasi mitologi,
 - [Roadmap](docs/ROADMAP.md) — tahapan implementasi bertahap dari fondasi hingga release candidate.
 - [Proses SDD](docs/sdd/README.md) — metodologi, struktur dokumentasi, dan aturan gerbang tahapan.
 - [Laporan Tahap](docs/sdd/reports/SDD-00-report.md) — laporan pekerjaan tahap SDD-00.
+
+## Spesifikasi Sistem
+
+- [DATA-PERSISTENCE-SPEC](docs/sdd/specifications/DATA-PERSISTENCE-SPEC.md) — penyimpanan data pemain yang bertahan pembaruan.
+- [DATA-MIGRATION-SPEC](docs/sdd/specifications/DATA-MIGRATION-SPEC.md) — migrasi schema data antar versi.
+- [UPDATE-SYSTEM-SPEC](docs/sdd/specifications/UPDATE-SYSTEM-SPEC.md) — alur pembaruan aplikasi dan pengelolaan aset.
+- [APK-COMPATIBILITY-SPEC](docs/sdd/specifications/APK-COMPATIBILITY-SPEC.md) — identitas paket, versi, signing, dan workflow build APK.
+- [UPDATE-TEST-PLAN](docs/sdd/verification/UPDATE-TEST-PLAN.md) — skenario pengujian pembaruan dan persistensi data.
 
 ## Prinsip Pengembangan
 
@@ -36,7 +45,7 @@ astranusa/
 │   ├── TECHNICAL_ARCHITECTURE.md
 │   ├── DECISION_LOG.md
 │   ├── ROADMAP.md
-│   ├── sdd/                  # Proses, laporan tahap, dan arsip SDD
+│   ├── sdd/                  # Proses, laporan tahap, spesifikasi, dan arsip SDD
 │   └── templates/            # Template dokumen SDD
 ├── game/                     # Root proyek Godot 4 (diinisialisasi pada SDD-01)
 └── .github/

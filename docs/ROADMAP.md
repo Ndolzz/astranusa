@@ -14,7 +14,7 @@ Roadmap ini mendefinisikan tahapan implementasi bertahap. Setiap tahap memiliki 
 | Tahap | Nama | Tujuan Utama | Kriteria Keluar Utama |
 | --- | --- | --- | --- |
 | SDD-00 | Project Foundation | Fondasi dokumentasi: overview, arsitektur, decision log, roadmap, struktur SDD. | Dokumen fondasi disetujui; repository terinisialisasi dengan struktur dasar. |
-| SDD-01 | Repository & CI Foundation | Inisialisasi proyek Godot 4 pada `game/`, workflow validasi dan pengujian dasar, penguncian versi. | CI berjalan hijau pada proyek kosong; versi Godot dan dependensi terkunci; keputusan O-001 hingga O-004, O-008, O-016 diselesaikan. |
+| SDD-01 | Repository & CI Foundation | Inisialisasi proyek Godot 4 pada `game/`, workflow validasi dan pengujian dasar, penguncian versi. | CI berjalan hijau pada proyek kosong; versi Godot dan dependensi terkunci; keputusan O-001 hingga O-004, O-008 diselesaikan. |
 | SDD-02 | Core Framework | Layanan inti: event bus, scene router, config service, save service, state machine, object pool. | Layanan inti berfungsi dan memiliki unit test yang berjalan di CI. |
 | SDD-03 | Data Layer | Skema dan validator data konfigurasi (hero, item, emblem, battle spell, rank, nickname); data sampel satu hero. | Validasi konfigurasi berjalan di CI; keputusan O-005 dan O-006 diselesaikan. |
 | SDD-04 | Lobby Shell | Struktur lobby: bottom navigation lima tab, header profil, placeholder 3D showcase, penyimpanan profil lokal. | Lobby dapat dinavigasi; profil tersimpan antar sesi; keputusan O-010 dan O-013 diselesaikan. |
@@ -24,9 +24,9 @@ Roadmap ini mendefinisikan tahapan implementasi bertahap. Setiap tahap memiliki 
 | SDD-08 | AI Bots | AI berlapis (strategic, tactical, operational), pembagian role dan fungsi jungler, profile kesulitan per tier rank. | Bot menyelesaikan objektif; tier kesulitan lebih tinggi terbukti lebih baik melalui simulasi antar bot; keputusan O-007 diselesaikan. |
 | SDD-09 | Match Flow & Modes | Alur draft dan pertandingan, empat mode (Classic, Ranked, Practice, Custom), layar hasil, integrasi announcer. | Empat mode dapat dimainkan offline; keputusan O-015 diselesaikan. |
 | SDD-10 | Progression & Rank | Progresi rank dan divisi, penyimpanan integritas lokal, nickname bot. | Progresi rank bertahan antar pertandingan; keputusan O-009 diselesaikan. |
-| SDD-11 | Content Production | 15 hero lengkap beserta data item, emblem, dan battle spell. | Seluruh konten lolos validasi CI; keputusan O-014 diselesaikan. |
+| SDD-11 | Content Production | 15 hero lengkap beserta data item, emblem, dan battle spell. | Seluruh konten lolos validasi CI; keputusan O-014, O-020, dan O-021 diselesaikan. |
 | SDD-12 | Polish & Performance | HUD final, settings, audio, announcer lengkap, optimasi kinerja dan memori. | Anggaran kinerja dan memori terpenuhi pada perangkat target; keputusan O-017 diselesaikan. |
-| SDD-13 | Release Candidate | Workflow export APK final, artifact, verifikasi manual, versioning. | APK dapat dibangun secara konsisten oleh CI dan lolos acceptance manual. |
+| SDD-13 | Release Candidate | Workflow export APK final, artifact, verifikasi manual, versioning. | APK dapat dibangun secara konsisten oleh CI dan lolos acceptance manual; keputusan O-018 diselesaikan. |
 
 ## Diagram Ketergantungan Tahapan
 
@@ -52,6 +52,18 @@ Catatan ketergantungan:
 1. SDD-04 (Lobby Shell) hanya bergantung pada SDD-02; namun penyelesaian aset 3D showcase bergantung pada keputusan O-010 yang juga memengaruhi SDD-11.
 2. SDD-08 membutuhkan SDD-07 karena perilaku AI membutuhkan seluruh sistem peta yang berfungsi.
 3. SDD-11 dan SDD-12 dapat berjalan sebagian bersamaan setelah SDD-10, dengan koordinasi melalui spesifikasi masing-masing.
+
+## Spesifikasi Sistem Lintas Tahap
+
+Spesifikasi berikut mengikat lebih dari satu tahap dan wajib dipatuhi oleh setiap tahap yang relevan:
+
+| Spesifikasi | Lingkup | Tahap yang Terikat |
+| --- | --- | --- |
+| [DATA-PERSISTENCE-SPEC](sdd/specifications/DATA-PERSISTENCE-SPEC.md) | Penyimpanan data pemain yang bertahan pembaruan. | SDD-02, SDD-03, SDD-04, SDD-10, SDD-13. |
+| [DATA-MIGRATION-SPEC](sdd/specifications/DATA-MIGRATION-SPEC.md) | Migrasi schema data antar versi. | SDD-02, SDD-03, SDD-10, SDD-12. |
+| [UPDATE-SYSTEM-SPEC](sdd/specifications/UPDATE-SYSTEM-SPEC.md) | Alur pembaruan aplikasi dan pengelolaan aset. | SDD-01, SDD-02, SDD-03, SDD-11, SDD-12, SDD-13. |
+| [APK-COMPATIBILITY-SPEC](sdd/specifications/APK-COMPATIBILITY-SPEC.md) | Identitas paket, versi, signing, dan workflow build APK. | SDD-01, SDD-13. |
+| [UPDATE-TEST-PLAN](sdd/verification/UPDATE-TEST-PLAN.md) | Skenario pengujian pembaruan dan persistensi. | SDD-02, SDD-04, SDD-09, SDD-10, SDD-13. |
 
 ## Cara Membaca Roadmap Ini
 
