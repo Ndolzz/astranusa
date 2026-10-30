@@ -112,6 +112,7 @@ Terverifikasi pada eksekusi workflow Validation, run `41002625549` (commit `57af
 5. Tinjauan statis workflow menemukan kecacatan berisiko tinggi sebelum eksekusi pertama: `yes | sdkmanager --licenses` exit 141 (SIGPIPE) di bawah `set -euo pipefail`, pola kegagalan CI Android yang terdokumentasi luas. Perbaikan minimal diterapkan sesuai P-013 (disetujui pemilik proyek pada 2026-10-30).
 6. Seluruh butir verifikasi APK (applicationId, versionName, versionCode, arsitektur arm64-v8a dan armeabi-v7a, integritas, scene boot) tetap pending hingga artifact tersedia; kecocokan nilai pada konfigurasi export telah divalidasi test harness (TF-03) namun bukan bukti kompatibilitas perangkat.
 7. Eksekusi pertama workflow Android Build (dispatch manual pemilik proyek, run `41003932265`, 2026-10-30) gagal dalam 13 detik sebelum kode proyek tersentuh; penyebab: kerusakan upstream `android-actions/setup-android` v3 yang memasang paket `tools` legacy yang telah dihapus Google dari repositori SDK. Perbaikan: upgrade ke v4 sesuai P-014 (disetujui pemilik proyek pada 2026-10-30). Belum ada APK yang dihasilkan; build ulang menunggu dispatch manual berikutnya.
+8. Eksekusi kedua workflow Android Build (dispatch manual pemilik proyek, 2026-10-30) gagal pada langkah Export debug APK: Godot tidak membuat direktori tujuan `build/` secara otomatis (`Target folder does not exist or is inaccessible`). Seluruh langkah sebelumnya lolos sehingga perbaikan P-014 terbukti memadai; perbaikan P-015 menambahkan `mkdir -p build` sebelum ekspor. Commit P-014 juga tanpa sengaja menyimpan `docs/DECISION_LOG.md` dalam lapisan enkode JSON; commit ini memulihkan formatnya tanpa mengubah isi keputusan.
 
 ## 8. Kendala dan Keputusan yang Masih Terbuka
 
@@ -122,6 +123,7 @@ Terverifikasi pada eksekusi workflow Validation, run `41002625549` (commit `57af
 5. Tinjauan statis verifikasi akhir menemukan risiko kegagalan langkah penerimaan lisensi SDK pada workflow Android Build (SIGPIPE di bawah pipefail); perbaikan minimal diterapkan sesuai P-013 (disetujui pemilik proyek pada 2026-10-30).
 6. Eksekusi workflow Android Build memerlukan dispatch manual pemilik proyek; tooling verifikator tidak menyediakan kapabilitas dispatch, sehingga tidak ada klaim keberhasilan build yang dibuat.
 7. Eksekusi pertama Android Build (run `41003932265`) gagal karena kerusakan upstream action setup (paket `tools` dihapus Google; P-014). Diperlukan dispatch ulang oleh pemilik proyek setelah perbaikan untuk membuktikan build lolos.
+8. Eksekusi kedua Android Build gagal pada langkah Export debug APK karena direktori tujuan tidak dibuat (P-015). Diperlukan dispatch ketiga oleh pemilik proyek untuk membuktikan build lolos.
 
 ## 9. Acceptance Status
 
@@ -134,12 +136,12 @@ Terverifikasi pada eksekusi workflow Validation, run `41002625549` (commit `57af
 | 5. Metadata versi valid. | Terpenuhi; divalidasi TF-01 dan langkah CI TF-07. |
 | 6. Automated tests benar-benar berjalan. | Terpenuhi. Test harness dieksekusi pada CI dengan hasil success (run `41002625549`). |
 | 7. Validation workflow berhasil. | Terpenuhi. Kedua job selesai success. |
-| 8. Android build menghasilkan APK debug atau kendala spesifik dilaporkan. | Percobaan pertama (run `41003932265`, 2026-10-30) gagal pada langkah setup SDK karena kerusakan upstream `android-actions/setup-android` v3; perbaikan P-013 dan P-014 diterapkan; menunggu dispatch ulang oleh pemilik proyek. |
+| 8. Android build menghasilkan APK debug atau kendala spesifik dilaporkan. | Kendala spesifik dilaporkan: percobaan pertama (run `41003932265`) gagal pada langkah setup SDK (P-014); percobaan kedua gagal pada langkah Export debug APK karena direktori tujuan `build/` tidak dibuat (P-015). Perbaikan P-013, P-014, dan P-015 diterapkan; menunggu dispatch ketiga oleh pemilik proyek. |
 | 9. Dokumentasi saling konsisten. | Terpenuhi; ditinjau silang antar dokumen. |
 | 10. Tidak ada perubahan di luar scope. | Terpenuhi; tidak ada gameplay, hero, AI, lobby, atau sistem pertandingan yang diimplementasikan. |
 
 ## 10. Rekomendasi Tahap SDD Berikutnya
 
-1. Pemilik proyek menjalankan workflow Android Build secara manual (perbaikan P-013 dan P-014 telah diterapkan), mengunduh artifact APK debug, dan melakukan MF-01 s.d. MF-05 pada perangkat nyata, lalu menetapkan acceptance SDD-01.
+1. Pemilik proyek menjalankan workflow Android Build secara manual (perbaikan P-013, P-014, dan P-015 telah diterapkan), mengunduh artifact APK debug, dan melakukan MF-01 s.d. MF-05 pada perangkat nyata, lalu menetapkan acceptance SDD-01.
 2. Tahap berikutnya: SDD-02 (Core Framework). Persiapan yang disarankan: requirement dan desain layanan inti (event bus, scene router, config service, save service, state machine, object pool), dengan tetap menahan implementasi hingga spesifikasinya disetujui.
 3. Evaluasi ulang kebutuhan framework pengujian (GUT/gdUnit4) dilakukan pada requirement SDD-02 sebagaimana dicatat pada P-008.
