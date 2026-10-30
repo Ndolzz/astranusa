@@ -144,6 +144,12 @@ Status yang digunakan:
 - Konteks: Eksekusi kedua workflow Android Build (dispatch manual pemilik proyek, 2026-10-30) gagal pada langkah Export debug APK: Godot tidak membuat direktori tujuan ekspor secara otomatis sehingga perintah gagal dengan `Target folder does not exist or is inaccessible: "build"`. Seluruh langkah sebelumnya (setup SDK v4, instalasi komponen SDK, unduh editor dan template, import, keystore debug, sinkronisasi versi) lolos, sehingga perbaikan P-014 terbukti memperbaiki kegagalan setup SDK. Pesan `cannot connect to daemon at tcp:5037` dari adb bersifat non-fatal karena tidak ada perangkat terhubung pada runner.
 - Konsekuensi: Langkah Export debug APK pada `android-build.yml` menjalankan `mkdir -p build` sebelum `--export-debug`. Tidak ada perubahan versi toolchain, preset export, ataupun langkah lain. Commit ini juga memulihkan format berkas ini ke Markdown murni setelah commit P-014 tanpa sengaja menyimpan lapisan enkode JSON pada berkas tersebut; tidak ada isi keputusan yang berubah.
 
+### P-016 — Verifikasi APK memakai aapt2 alih-alih aapt legacy
+
+- Status: Accepted (disetujui pemilik proyek pada 2026-10-30).
+- Konteks: Eksekusi ketiga workflow Android Build (dispatch manual pemilik proyek, 2026-10-30) berhasil mengekspor APK — perbaikan P-015 terbukti bekerja — namun gagal pada langkah Verify APK identity and version: `aapt` legacy tidak dapat membaca manifest biner Android buatan Godot (`failed to read attribute 'android:required': attribute is not an integer value`) karena aapt legacy membaca atribut tersebut sebagai integer. Kegagalan berpola identik pada APK Godot terdokumentasi di proyek lain dan diperbaiki dengan beralih ke `aapt2 dump badging`.
+- Konsekuensi: Langkah verifikasi memakai `aapt2` bawaan build-tools 35.0.1 yang terkunci, dengan kegagalan eksplisit jika aapt2 tidak tersedia. Tidak ada perubahan daftar pemeriksaan (applicationId, versionCode, versionName, arsitektur) maupun langkah lain.
+
 ## Bagian 3: Keputusan Terbuka
 
 Setiap keputusan terbuka mencantumkan tahap batas: keputusan harus dibuat sebelum tahap tersebut dimulai. Tidak boleh ada asumsi yang menggantikan keputusan terbuka.

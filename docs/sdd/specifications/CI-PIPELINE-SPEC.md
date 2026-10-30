@@ -3,7 +3,7 @@
 - Status: Approved (disetujui pemilik proyek pada 2026-10-30)
 - Sistem: Continuous Integration dan Delivery
 - Tahap roadmap terikat: SDD-01; mengikat seluruh tahap berikutnya
-- Terakhir diperbarui: 2026-10-30 (risiko kegagalan penerimaan lisensi SDK, upgrade setup-android v4, dan pembuatan direktori ekspor tercatat pada verifikasi akhir SDD-01)
+- Terakhir diperbarui: 2026-10-30 (risiko kegagalan penerimaan lisensi SDK, upgrade setup-android v4, pembuatan direktori ekspor, dan penggantian alat verifikasi ke aapt2 tercatat pada verifikasi akhir SDD-01)
 
 ## 1. Tujuan
 
@@ -58,7 +58,7 @@ Job `validate`:
 6. Buat keystore debug standar Android per eksekusi (kredensial debug publik bawaan; bukan rahasia).
 7. `godot --headless --script res://tools/apply_version.gd`: menyinkronkan `version/code` dan `version/name` dari `version.json` ke preset export, memverifikasi `applicationId`, dan memasang path keystore debug dari variabel lingkungan.
 8. `mkdir -p build` lalu `godot --headless --export-debug "Android Debug" build/astranusa-debug.apk` (P-015: Godot tidak membuat direktori tujuan secara otomatis).
-9. Verifikasi artifact APK: integritas zip, `applicationId` sama dengan nilai terkunci, `versionCode` dan `versionName` sama dengan `version.json`, serta keberadaan arsitektur `arm64-v8a` dan `armeabi-v7a` melalui `aapt dump badging`. Ketidaksesuaian menggagalkan build sebelum artifact didistribusikan.
+9. Verifikasi artifact APK: integritas zip, `applicationId` sama dengan nilai terkunci, `versionCode` dan `versionName` sama dengan `version.json`, serta keberadaan arsitektur `arm64-v8a` dan `armeabi-v7a` melalui `aapt2 dump badging`. Ketidaksesuaian menggagalkan build sebelum artifact didistribusikan.
 10. Ekstrak ringkasan changelog versi terkini dari `CHANGELOG.md` sebagai `release-notes.md`.
 11. Upload artifact `astranusa-debug-apk` (APK dan ringkasan changelog) dengan retensi 14 hari.
 
@@ -105,6 +105,7 @@ Job `validate`:
 | `yes \| sdkmanager --licenses` exit 141 (SIGPIPE) di bawah `set -o pipefail` pada langkah instalasi komponen SDK; `yes` menerima SIGPIPE ketika `sdkmanager` menutup stdin sehingga langkah gagal meskipun penerimaan lisensi berhasil. Ditemukan melalui tinjauan statis verifikasi akhir SDD-01 (2026-10-30) sebelum eksekusi pertama workflow. | Pipeline `yes` dihapus dan lisensi diterima secara eksplisit melalui input `accept-android-sdk-licenses: true` pada `android-actions/setup-android` v3 (P-013). Tidak ada perubahan versi toolchain. |
 | `android-actions/setup-android` v3 memasang paket legacy `tools` yang telah dihapus Google dari repositori SDK; action gagal sebelum kode proyek tersentuh (dikonfirmasi pada eksekusi pertama run `41003932265`, gagal 13 detik). | Upgrade ke v4 sesuai P-014: default paket hanya `platform-tools`, native Node 24, input `accept-android-sdk-licenses` tetap tersedia. |
 | Godot tidak membuat direktori tujuan ekspor secara otomatis; eksekusi kedua workflow gagal pada langkah export (`Target folder does not exist or is inaccessible: "build"`). | Langkah Export debug APK menjalankan `mkdir -p build` sebelum `--export-debug` (P-015). |
+| `aapt` legacy tidak dapat membaca manifest biner Android buatan Godot (`android:required` tidak dikodekan sebagai integer), sehingga verifikasi gagal meskipun APK berhasil diekspor. | Langkah verifikasi memakai `aapt2` bawaan build-tools yang terkunci (P-016). |
 | Rilis lama tanpa aset `version.json`. | Workflow gagal dengan pesan eksplisit; konvensi aset rilis ditetapkan sejak rilis pertama. |
 
 ## 11. Acceptance Criteria
@@ -123,4 +124,4 @@ Status acceptance diperbarui pada [SDD-01-FOUNDATION-REPORT](../reports/SDD-01-F
 - [GODOT-CONFIGURATION-SPEC](GODOT-CONFIGURATION-SPEC.md)
 - [REPOSITORY-STRUCTURE-SPEC](REPOSITORY-STRUCTURE-SPEC.md)
 - [FOUNDATION-TEST-PLAN](../verification/FOUNDATION-TEST-PLAN.md)
-- [Decision Log](../../DECISION_LOG.md): P-004, P-007, P-011, P-012, P-013, P-014, P-015, O-018
+- [Decision Log](../../DECISION_LOG.md): P-004, P-007, P-011, P-012, P-013, P-014, P-015, P-016, O-018

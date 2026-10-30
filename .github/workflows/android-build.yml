@@ -88,13 +88,14 @@ jobs:
             exit 1
           fi
           unzip -t "$apk" > /dev/null
-          aapt="$ANDROID_HOME/build-tools/${ANDROID_BUILD_TOOLS}/aapt"
-          if [ ! -x "$aapt" ]; then
-            aapt="$ANDROID_HOME/build-tools/${ANDROID_BUILD_TOOLS}/aapt2"
+          aapt2="$ANDROID_HOME/build-tools/${ANDROID_BUILD_TOOLS}/aapt2"
+          if [ ! -x "$aapt2" ]; then
+            echo "::error::aapt2 tidak tersedia pada build-tools ${ANDROID_BUILD_TOOLS}"
+            exit 1
           fi
           expected_code=$(jq -r '.versionCode' game/version.json)
           expected_name=$(jq -r '.versionName' game/version.json)
-          badging=$("$aapt" dump badging "$apk")
+          badging=$("$aapt2" dump badging "$apk")
           echo "$badging" | head -n 3
           package_line=$(echo "$badging" | grep -m 1 "^package:")
           echo "$package_line" | grep -q "name='${EXPECTED_APPLICATION_ID}'" \
