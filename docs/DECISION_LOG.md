@@ -162,6 +162,32 @@ Status yang digunakan:
 - Konteks: Eksekusi kelima workflow Android Build (run #5, dispatch manual pemilik proyek, 2026-10-30) selesai success dalam 1 menit setelah empat kegagalan yang masing-masing diperbaiki oleh P-014 s.d. P-017. Verifikasi aapt2 mengonfirmasi applicationId `com.ndolzz.astranusa`, versionCode 1, versionName 0.1.0, serta arsitektur arm64-v8a dan armeabi-v7a sesuai P-009, dan artifact `astranusa-debug-apk` tersedia. Pemilik proyek kemudian melakukan pengujian manual MF-01 s.d. MF-06 pada perangkat Android nyata dan seluruhnya dinyatakan lolos pada 2026-10-30.
 - Konsekuensi: Seluruh kriteria acceptance SDD-01 terpenuhi (TF-01 s.d. TF-08, WF-01 s.d. WF-03, MF-01 s.d. MF-06) dan tahap Repository & CI Foundation dinyatakan selesai. Laporan fondasi, rencana pengujian, spesifikasi pipeline, roadmap, dan README diperbarui dengan hasil eksekusi kelima. Tahap berikutnya SDD-02 (Core Framework) dapat dimulai sesuai aturan tahapan roadmap.
 
+## Bagian 2E: Keputusan yang Diusulkan pada SDD-02 Technical Design (disetujui pemilik proyek pada 2026-10-31)
+
+### P-019 — Pola application lifecycle: autoload AppBootstrap dengan scene utama biasa
+
+- Status: Accepted (disetujui pemilik proyek pada 2026-10-31).
+- Konteks: OJ-1 CORE-FRAMEWORK-REQUIREMENTS menimbang skrip MainLoop/SceneTree kustom versus autoload bootstrap. Autoload menjamin seluruh inisialisasi berjalan sebelum scene utama, stabil pada export Android, menangkap notifikasi pause, resume, dan penutupan, serta menjaga jalur startup yang divalidasi test harness fondasi SDD-01; custom MainLoop kompleks, sulit diuji, dan berisiko terhadap kompatibilitas SDD-01.
+- Konsekuensi: AppBootstrap menjadi autoload pertama dan memanggil inisialisasi eksplisit per layanan sesuai urutan requirement bagian 9; scene utama tetap boot scene SDD-01 yang pasif. Keputusan ini menutup OJ-1 (usulan O-022).
+
+### P-020 — Pola akses layanan: autoload per layanan dengan daftar final delapan entri
+
+- Status: Accepted (disetujui pemilik proyek pada 2026-10-31).
+- Konteks: OJ-2 menimbang autoload per layanan sesuai TECHNICAL_ARCHITECTURE bagian 6 versus service locator tunggal. Autoload per layanan idiomatik, eksplisit, dan tetap dapat diuji terisolasi karena setiap layanan ditulis sebagai kelas dengan dependensi disuntikkan pada inisialisasi; service locator menyembunyikan arah ketergantungan dan menjadi titik pusat yang bertentangan dengan semangat autoload minimum.
+- Konsekuensi: Daftar autoload final: AppBootstrap, LogService, EventBus, ConfigService, SaveService, AudioService, InputService, SceneRouter; urutan deklarasi diselaraskan dengan urutan inisialisasi. GameState (StateMachine dan AppState), ObjectPool, dan CoreResourceLoader menjadi pustaka murni class_name tanpa autoload. Pendaftaran dilakukan pada tahap implementasi dengan verifikasi ulang TF-01 s.d. TF-08. Keputusan ini menutup OJ-2 (usulan O-023).
+
+### P-021 — Cakupan input manager SDD-02: façade minimal berbasis action map
+
+- Status: Accepted (disetujui pemilik proyek pada 2026-10-31).
+- Konteks: OJ-3 menimbang façade penuh, façade minimal, atau menunda seluruhnya ke SDD-05. Façade minimal menutup kebutuhan testability (CFR-FR-028) dan mencegah pembacaan input tersebar (CFR-FR-027) tanpa mendesain kontrol pertandingan secara prematur; façade penuh berisiko salah total karena kebutuhan kontrol pertandingan belum diketahui pada SDD-02.
+- Konsekuensi: InputService menjadi autoload façade berbasis action map data-driven dengan injeksi input sintetis untuk CI; kontrol pertandingan diperluas di atas façade yang sama pada SDD-05 tanpa merombak antarmuka inti. Keputusan ini menutup OJ-3 (usulan O-024).
+
+### P-022 — Penyimpanan log: log bergulir kecil pada `user://logs/` dengan bawaan WARN
+
+- Status: Accepted (disetujui pemilik proyek pada 2026-10-31).
+- Konteks: OJ-4 menimbang log bergulir kecil versus tanpa berkas log pada rilis. Opsi tanpa berkas log bertentangan dengan CFR-FR-030 (Must, Approved) yang mengikat penulisan log ke `user://logs/`, sehingga hanya mungkin melalui proses perubahan requirement resmi; analisis difokuskan pada parameter opsi log bergulir yang paling konservatif untuk perangkat kelas menengah.
+- Konsekuensi: Log ditulis pada `user://logs/` dengan tiga berkas (satu aktif, dua bergulir), batas 512 KB per berkas (total sekitar 1,5 MB), tingkat bawaan WARN pada rilis, penulisan buffer disiram batch pada momen aman, tanpa data pribadi dan tanpa isi store utuh. Keputusan ini menutup OJ-4 (usulan O-025).
+
 ## Bagian 3: Keputusan Terbuka
 
 Setiap keputusan terbuka mencantumkan tahap batas: keputusan harus dibuat sebelum tahap tersebut dimulai. Tidak boleh ada asumsi yang menggantikan keputusan terbuka.

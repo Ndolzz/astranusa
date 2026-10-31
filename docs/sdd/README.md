@@ -27,20 +27,21 @@ Setiap sistem atau fitur diimplementasikan melalui tujuh tahap berurutan:
 | Jenis Dokumen | Awalan | Direktori |
 | --- | --- | --- |
 | Requirement | `REQ-` | `docs/sdd/requirements/` |
-| Technical Design | `DES-` | `docs/sdd/design/` |
+| Technical Design | tanpa awalan (lihat catatan) | `docs/sdd/technical-design/` |
 | Specification | `SPEC-` | `docs/sdd/specifications/` |
 | Verification (rencana dan hasil pengujian) | `VER-` | `docs/sdd/verification/` |
 | Code Audit | `AUD-` | `docs/sdd/audits/` |
 | Acceptance | `ACC-` | `docs/sdd/acceptance/` |
 | Laporan tahap | `SDD-XX-report.md` | `docs/sdd/reports/` |
 
-Direktori `requirements/`, `design/`, `specifications/`, `verification/`, `audits/`, dan `acceptance/` dibuat pada tahap ketika dokumen pertamanya tersedia, agar repository tidak berisi direktori kosong.
+Direktori `requirements/`, `technical-design/`, `specifications/`, `verification/`, `audits/`, dan `acceptance/` dibuat pada tahap ketika dokumen pertamanya tersedia, agar repository tidak berisi direktori kosong.
 
 ## Konvensi Penamaan Dokumen
 
 1. Identifikasi dokumen: `<AWALAN>-<SISTEM>` dengan `SISTEM` ditulis dalam huruf besar dan camel case tanpa spasi. Contoh: `REQ-COMBAT.md`, `SPEC-AI-STRATEGY.md`.
 2. Nama file menggunakan huruf besar untuk identifikasi dan dipisahkan dengan tanda hubung. Contoh: `REQ-RANK.md`, `DES-CONCEALMENT.md`.
 3. Laporan tahap menggunakan penomoran roadmap: `SDD-05-report.md`.
+4. Pengecualian (disetujui pemilik proyek pada 2026-10-31): dokumen requirement dan technical design SDD-02 memakai nama sistem berhuruf besar tanpa awalan, contoh `CORE-FRAMEWORK-REQUIREMENTS.md` dan `CORE-FRAMEWORK-ARCHITECTURE.md`.
 
 ## Status Dokumen
 
