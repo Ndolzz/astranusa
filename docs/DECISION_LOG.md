@@ -188,6 +188,69 @@ Status yang digunakan:
 - Konteks: OJ-4 menimbang log bergulir kecil versus tanpa berkas log pada rilis. Opsi tanpa berkas log bertentangan dengan CFR-FR-030 (Must, Approved) yang mengikat penulisan log ke `user://logs/`, sehingga hanya mungkin melalui proses perubahan requirement resmi; analisis difokuskan pada parameter opsi log bergulir yang paling konservatif untuk perangkat kelas menengah.
 - Konsekuensi: Log ditulis pada `user://logs/` dengan tiga berkas (satu aktif, dua bergulir), batas 512 KB per berkas (total sekitar 1,5 MB), tingkat bawaan WARN pada rilis, penulisan buffer disiram batch pada momen aman, tanpa data pribadi dan tanpa isi store utuh. Keputusan ini menutup OJ-4 (usulan O-025).
 
+## Bagian 2F: Keputusan yang Diusulkan pada SDD-02 Specification (disetujui pemilik proyek pada 2026-10-31)
+
+### P-023 — Nilai polyphony final AudioService: music 1, sfx 8, announcer 2
+
+- Status: Accepted (disetujui pemilik proyek pada 2026-10-31).
+- Konteks: CFR-FR-025 dan requirement bagian 12 nomor 6 menuntut batas polyphony per kategori ditetapkan pada spesifikasi SDD-02 dengan nilai bawaan konservatif untuk perangkat kelas menengah. Analisis menimbang kepadatan efek khas MOBA dan biaya node pemutar pada Android: satu musik latar, delapan efek bersamaan, dan dua announcer yang tidak saling menimpa.
+- Konsekuensi: AudioService menolak pemutaran yang melampaui batas dengan status eksplisit; prewarm pool per kategori sama dengan batas polyphony kategori; `master` tetap bus keluaran tanpa voice dan tanpa batas polyphony. Nilai dievaluasi ulang pada verifikasi tanpa mengubah kontrak antarmuka.
+
+### P-024 — Konvensi kesalahan layanan: status operasional eksplisit, pelanggaran kontrak ditolak keras
+
+- Status: Accepted (disetujui pemilik proyek pada 2026-10-31).
+- Konteks: Requirement bagian 13 menuntut klasifikasi kesalahan ditetapkan pada spesifikasi. Kegagalan operasional (ruang tidak cukup, store rusak, route tak dikenal) dan pelanggaran kontrak pemanggil (operasi sebelum setup pool, pelepasan ganda, parameter tidak sah) memerlukan perlakuan berbeda agar tidak muncul kegagalan senyap (CFR-FR-031).
+- Konsekuensi: Kegagalan operasional dikembalikan sebagai status eksplisit pada Dictionary hasil operasi; pelanggaran kontrak ditolak dengan log ERROR dan `push_error`. Seluruh operasi publik layanan yang dapat gagal mengembalikan Dictionary berisi kunci `status` dengan konstanta string terdokumentasi pada SERVICE-API-SPEC.
+
+### P-025 — Kebijakan alokasi objek: nol alokasi pada jalur per-frame framework, pertumbuhan pool hanya eksplisit
+
+- Status: Accepted (disetujui pemilik proyek pada 2026-10-31).
+- Konteks: CFR-FR-033 dan GODOT-CONFIGURATION-SPEC bagian 5 menuntut kebijakan alokasi loop utama ditegakkan framework. Pilihan ketat diterapkan karena alokasi tersembunyi pada jalur per-frame sulit diaudit setelah kode menyebar.
+- Konsekuensi: Jalur per-frame framework (dispatch EventBus, poll loader, acquire pool, penulisan buffer log) dilarang mengalokasikan; ObjectPool mengembalikan `null` saat stok habis dan hanya tumbuh melalui `grow(n)` eksplisit di luar jalur per-frame. Kepatuhan diverifikasi melalui audit kode dan pengukuran verifikasi (CFR-NFR-005).
+
+### P-026 — Permintaan transisi scene bersamaan ditolak dengan status busy
+
+- Status: Accepted (disetujui pemilik proyek pada 2026-10-31).
+- Konteks: CFR-FR-005 menuntut seluruh perpindahan melalui router. Perilaku `go_to` saat transisi lain sedang berjalan dianalisis: menolak, mengantrekan, membatalkan, atau menggantikan. Penolakan paling deterministik dan paling mudah diuji; mekanisme antrean dan pembatalan menambah keadaan yang tidak dibutuhkan SDD-02.
+- Konsekuensi: SceneRouter menolak permintaan baru dengan status `busy` dan catatan ERROR tanpa memengaruhi transisi yang sedang berjalan; pemanggil bertanggung jawab mencoba ulang. Tidak ada antrean, pembatalan, maupun penggantian permintaan.
+
+### P-027 — Batas waktu pemuatan resource dan scene: 10000 ms, dapat diganti per pemanggilan
+
+- Status: Accepted (disetujui pemilik proyek pada 2026-10-31).
+- Konteks: CFR-FR-034 melarang pemuatan menggantung tanpa batas. Nilai bawaan dipilih cukup longgar untuk perangkat kelas bawah dan penyimpanan lambat, tanpa membuat pemain menunggu tanpa umpan balik terlalu lama.
+- Konsekuensi: CoreResourceLoader dan `go_to` memakai `timeout_ms` bawaan 10000 yang dapat diganti per pemanggilan; sumber waktu disuntikkan agar batas waktu dapat diuji headless; lewat batas mengembalikan status `timeout` eksplisit tanpa menggantung.
+
+### P-028 — Sumber action map InputService pada SDD-02: data bawaan internal
+
+- Status: Accepted (disetujui pemilik proyek pada 2026-10-31).
+- Konteks: OJ-3 (P-021) menetapkan façade minimal berbasis action map. Sumber peta aksi pada SDD-02 dianalisis: memuat peta dari berkas konfigurasi sejak sekarang berisiko mendesain skema konfigurasi sebelum kebutuhan kontrol pertandingan diketahui (SDD-05), sementara façade tetap memerlukan aksi untuk pengujian headless.
+- Konsekuensi: InputService memuat dua aksi bawaan internal (`ui_confirm`, `ui_cancel`) pada SDD-02 sebagai sumber action map; sumber berkas konfigurasi ditambahkan mulai SDD-03 tanpa mengubah antarmuka. CFR-FR-027 dan CFR-FR-028 tetap terpenuhi.
+
+### P-029 — Penamaan skrip migrasi headless: `game/tools/migrate_stores.gd`
+
+- Status: Accepted (disetujui pemilik proyek pada 2026-10-31).
+- Konteks: REPOSITORY-STRUCTURE-SPEC bagian 6 nomor 5 menetapkan penamaan berkas skrip pola kata kerja dan objek. Nama `migrate_only.gd` pada dokumen technical design melanggar konvensi tersebut karena menyatakan mode, bukan tindakan.
+- Konsekuensi: Skrip migrasi headless dinamai `game/tools/migrate_stores.gd`; bendera CLI `--migrate-only` tidak berubah. Kontrak DATA-MIGRATION-SPEC bagian 4 dan CFR-INT-004 tetap terpenuhi.
+
+### P-030 — Kaskade pemulihan store SaveService: cadangan terbaru dahulu, mode aman dan karantina terakhir
+
+- Status: Accepted (disetujui pemilik proyek pada 2026-10-31).
+- Konteks: CFR-FR-023 menuntut store dengan checksum tidak cocok dipulihkan dari cadangan tanpa menghapus berkas lama. Urutan pemulihan ketika beberapa cadangan tersedia perlu ditetapkan final agar perilaku deterministik dan dapat diuji.
+- Konsekuensi: Pemulihan mencoba cadangan terbaru terlebih dahulu, lalu cadangan lebih tua hingga retensi maksimum dua; bila seluruh cadangan gagal, store dibuat ulang dengan nilai default (mode aman) dan berkas rusak dipindahkan ke karantina, tidak dihapus. Jurnal mencatat jalur pemulihan yang ditempuh; store lain tidak terdampak.
+
+### P-031 — Perbaikan konsistensi dokumen REPOSITORY-STRUCTURE-SPEC dan sdd/README
+
+- Status: Accepted (disetujui pemilik proyek pada 2026-10-31).
+- Konteks: Audit tahap spesifikasi menemukan dua ketidaksesuaian dokumentasi: REPOSITORY-STRUCTURE-SPEC bagian 3 ketentuan 3 masih merujuk direktori `design/` padahal struktur final tahap technical design memakai `technical-design/`, dan baris Specification pada `docs/sdd/README.md` belum selaras dengan penamaan dokumen spesifikasi SDD-02.
+- Konsekuensi: REPOSITORY-STRUCTURE-SPEC bagian 3 ketentuan 3 diperbarui merujuk `technical-design/`; `docs/sdd/README.md` menyesuaikan baris Specification dan memperluas catatan pengecualian penamaan. Tidak ada perubahan isi keputusan teknis.
+
+### P-032 — Struktur sepuluh dokumen spesifikasi SDD-02 dengan katalog tanda tangan tunggal
+
+- Status: Accepted (disetujui pemilik proyek pada 2026-10-31).
+- Konteks: Tahap penyusunan menimbang pemisahan dokumen spesifikasi implementasi. Struktur sepuluh dokumen disetujui bersama keputusan P-023 s.d. P-031 dengan pembagian peran: tanda tangan antarmuka dicantumkan tepat satu kali pada dokumen katalog, dokumen modul hanya memuat semantika, mencegah duplikasi kontrak yang dapat saling bertentangan.
+- Konsekuensi: Spesifikasi implementasi SDD-02 terdiri atas sepuluh dokumen pada `docs/sdd/specifications/`: dokumen payung, katalog API, delapan spesifikasi modul dan pengujian. Penambahan atau pemisahan dokumen berikutnya memerlukan persetujuan pemilik proyek.
+
+
 ## Bagian 3: Keputusan Terbuka
 
 Setiap keputusan terbuka mencantumkan tahap batas: keputusan harus dibuat sebelum tahap tersebut dimulai. Tidak boleh ada asumsi yang menggantikan keputusan terbuka.

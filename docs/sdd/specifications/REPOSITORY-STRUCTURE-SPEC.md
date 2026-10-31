@@ -3,7 +3,7 @@
 - Status: Approved (disetujui pemilik proyek pada 2026-10-30)
 - Sistem: Repository Layout
 - Tahap roadmap terikat: SDD-01; mengikat seluruh tahap berikutnya
-- Terakhir diperbarui: 2026-10-30
+- Terakhir diperbarui: 2026-10-31
 
 ## 1. Tujuan
 
@@ -41,7 +41,7 @@ Ketentuan:
 
 1. Dokumentasi tidak ditempatkan di dalam `game/` (P-001).
 2. `game/version.json` adalah satu-satunya sumber kebenaran versi (P-004).
-3. Direktori `docs/sdd/requirements/`, `design/`, `audits/`, dan `acceptance/` dibuat ketika dokumen pertamanya tersedia, sesuai [Proses SDD](../README.md); tidak ada direktori kosong.
+3. Direktori `docs/sdd/requirements/`, `technical-design/`, `audits/`, dan `acceptance/` dibuat ketika dokumen pertamanya tersedia, sesuai [Proses SDD](../README.md); tidak ada direktori kosong.
 
 ## 4. Struktur Internal game/
 
