@@ -54,6 +54,19 @@ jobs:
       - name: Run foundation tests
         working-directory: game
         run: ../godot --headless --script res://tests/foundation_tests.gd
+      - name: Run core suite tests
+        working-directory: game
+        run: |
+          set -euo pipefail
+          for suite in tests/core_*_tests.gd; do
+            [ -e "$suite" ] || continue
+            echo "Menjalankan suite: $suite"
+            if ! ../godot --headless --script "res://$suite"; then
+              echo "::error file=game/$suite::Suite $suite gagal"
+              exit 1
+            fi
+          done
+          echo "Seluruh suite core lulus."
       - name: Validate version metadata against previous release
         working-directory: game
         env:
