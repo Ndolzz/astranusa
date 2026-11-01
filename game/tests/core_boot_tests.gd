@@ -153,7 +153,7 @@ class StubProbe extends RefCounted:
 
 
 class StubLoader extends RefCounted:
-	pass
+	var _placeholder := 0
 
 
 func _initialize() -> void:
