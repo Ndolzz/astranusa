@@ -54,6 +54,16 @@ jobs:
       - name: Run foundation tests
         working-directory: game
         run: ../godot --headless --script res://tests/foundation_tests.gd
+      - name: Diagnose foundation failure
+        if: failure()
+        working-directory: game
+        run: |
+          set +e
+          ../godot --headless --script res://tests/foundation_tests.gd > foundation_diag.txt 2>&1
+          grep -E "FAIL|ERROR|error|Parse" foundation_diag.txt | tail -n 10 | while IFS= read -r line; do
+            echo "::error::${line}"
+          done
+          exit 0
       - name: Run core suite tests
         working-directory: game
         run: |

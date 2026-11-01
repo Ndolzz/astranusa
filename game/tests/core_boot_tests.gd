@@ -12,6 +12,7 @@ extends SceneTree
 
 
 const BOOTSTRAP_PATH := "res://src/core/app_bootstrap.gd"
+const TestLib := preload("res://tests/core_test_lib.gd")
 const MAX_SANE_BOOT_MS := 60000
 
 
@@ -156,7 +157,7 @@ class StubLoader extends RefCounted:
 
 
 func _initialize() -> void:
-	var lib := CoreTestLib.new("core_boot_tests")
+	var lib := TestLib.new("core_boot_tests")
 	_cb_01_sequence(lib)
 	_cb_02_failure_classification(lib)
 	_cb_03_normal_shutdown(lib)
@@ -186,6 +187,7 @@ func _ok_services() -> Dictionary:
 func _make_boot(services: Dictionary) -> Node:
 	var script: Variant = load(BOOTSTRAP_PATH)
 	var bootstrap := script.new() as Node
+	# gdlint:ignore = private-method-call — jalur suntikan stub (TEST-SPEC bagian 4).
 	bootstrap._inject_services(services)
 	return bootstrap
 
@@ -216,7 +218,7 @@ func _emitted(bus: StubBus, event_name: String) -> Array:
 	return payloads
 
 
-func _cb_01_sequence(lib: CoreTestLib) -> void:
+func _cb_01_sequence(lib) -> void:
 	var services := _ok_services()
 	var bus: StubBus = services["EventBus"]
 	var save: StubSave = services["SaveService"]
@@ -259,7 +261,7 @@ func _cb_01_sequence(lib: CoreTestLib) -> void:
 	)
 
 
-func _cb_02_failure_classification(lib: CoreTestLib) -> void:
+func _cb_02_failure_classification(lib) -> void:
 	var services := _ok_services()
 	var audio: StubAudio = services["AudioService"]
 	audio.init_status = "degraded"
@@ -319,7 +321,7 @@ func _cb_02_failure_classification(lib: CoreTestLib) -> void:
 		)
 
 
-func _cb_03_normal_shutdown(lib: CoreTestLib) -> void:
+func _cb_03_normal_shutdown(lib) -> void:
 	var services := _ok_services()
 	var boot := _make_boot(services)
 	boot.initialize()
@@ -338,7 +340,7 @@ func _cb_03_normal_shutdown(lib: CoreTestLib) -> void:
 	)
 
 
-func _cb_05_pause_resume(lib: CoreTestLib) -> void:
+func _cb_05_pause_resume(lib) -> void:
 	var services := _ok_services()
 	var bus: StubBus = services["EventBus"]
 	var input: StubInput = services["InputService"]
@@ -376,7 +378,7 @@ func _cb_05_pause_resume(lib: CoreTestLib) -> void:
 	)
 
 
-func _cb_06_close_request(lib: CoreTestLib) -> void:
+func _cb_06_close_request(lib) -> void:
 	var services := _ok_services()
 	var boot := _make_boot(services)
 	boot.initialize()
@@ -395,7 +397,7 @@ func _cb_06_close_request(lib: CoreTestLib) -> void:
 	)
 
 
-func _cb_07_boot_time(lib: CoreTestLib) -> void:
+func _cb_07_boot_time(lib) -> void:
 	var services := _ok_services()
 	var boot := _make_boot(services)
 	var result: Dictionary = boot.initialize()
@@ -407,7 +409,7 @@ func _cb_07_boot_time(lib: CoreTestLib) -> void:
 	)
 
 
-func _cb_08_app_ready_event(lib: CoreTestLib) -> void:
+func _cb_08_app_ready_event(lib) -> void:
 	var services := _ok_services()
 	var bus: StubBus = services["EventBus"]
 	var input: StubInput = services["InputService"]
@@ -416,11 +418,13 @@ func _cb_08_app_ready_event(lib: CoreTestLib) -> void:
 	lib.assert_eq(
 		boot.current_app_state(), "READY", "CB-08", "status READY sebelum event diperiksa"
 	)
+	var builtin_seen: Variant = input.config_seen
+	var cancel_events: Array = builtin_seen.get("ui_cancel", {}).get("events", [])
+	var cancel_key := 0
+	if not cancel_events.is_empty():
+		cancel_key = int(cancel_events[0].get("code", 0))
 	lib.assert_eq(
-		str(input.config_seen.get("ui_cancel", {}).get("events", [])[0].get("code", 0)),
-		str(KEY_ESCAPE),
-		"CB-08",
-		"action map bawaan diteruskan ke InputService"
+		cancel_key, KEY_ESCAPE, "CB-08", "action map bawaan diteruskan ke InputService"
 	)
 	var payloads := _emitted(bus, "app.ready")
 	lib.assert_eq(payloads.size(), 1, "CB-08", "app.ready dipancarkan tepat satu kali")

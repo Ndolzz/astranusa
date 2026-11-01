@@ -42,9 +42,7 @@ const FATAL_QUIT_DELAY_SEC := 3.0
 const MODULE_NAME := "AppBootstrap"
 const STATE_BOOT := "BOOT"
 const STATE_READY := "READY"
-const FATAL_PLAYER_MESSAGE := (
-	"Terjadi masalah saat memulai ASTRANUSA.\nSilakan mulai ulang aplikasi."
-)
+const FATAL_PLAYER_MESSAGE := "Terjadi masalah saat memulai ASTRANUSA. Mohon mulai ulang."
 
 
 var _booted := false
@@ -57,6 +55,9 @@ var _degraded: Array[String] = []
 var _test_mode := false
 var _services := {}
 var _app_state: Variant = null
+var _log_service: Variant = null
+var _config_service: Variant = null
+var _event_bus: Variant = null
 
 
 func _ready() -> void:
@@ -98,95 +99,15 @@ func initialize() -> Dictionary:
 		return _boot_result(BOOT_FATAL)
 	_boot_start_ms = Time.get_ticks_msec()
 	_degraded.clear()
-
-	var log_service: Variant = _service("LogService")
-	if log_service == null:
-		return _fatal_boot(2, "LogService tidak tersedia sebagai autoload.")
-	var log_result: Dictionary = log_service.initialize(LOGS_DIR, _base_log_level())
-	var log_status := str(log_result.get("status", ""))
-	if log_status != "ok":
-		return _fatal_boot(2, "LogService gagal diinisialisasi (status: %s)." % log_status)
-	log_service.info(MODULE_NAME, "Langkah 2 selesai: LogService siap.")
-
-	var config_service: Variant = _service("ConfigService")
-	if config_service == null:
-		return _fatal_boot(3, "ConfigService tidak tersedia sebagai autoload.")
-	var config_result: Dictionary = config_service.initialize(log_service)
-	var config_status := str(config_result.get("status", ""))
-	if config_status != "ok":
-		return _fatal_boot(3, "ConfigService gagal memuat nilai default (status: %s)." % config_status)
-	log_service.info(MODULE_NAME, "Langkah 3 selesai: konfigurasi dasar dimuat.")
-
-	var event_bus: Variant = _service("EventBus")
-	if event_bus == null:
-		return _fatal_boot(4, "EventBus tidak tersedia sebagai autoload.")
-	for registration in _app_event_registrations():
-		var reg_result: Dictionary = event_bus.register_event(
-			registration["name"], registration["mode"], registration["owner"], registration["keys"]
-		)
-		var reg_status := str(reg_result.get("status", ""))
-		if reg_status != "ok":
-			return _fatal_boot(
-				4, "Registrasi event %s gagal (status: %s)." % [registration["name"], reg_status]
-			)
-	log_service.info(MODULE_NAME, "Langkah 4 selesai: EventBus siap dan register diaudit.")
-
-	var save_service: Variant = _service("SaveService")
-	if save_service == null:
-		return _fatal_boot(5, "SaveService tidak tersedia sebagai autoload.")
-	var probe_script: Variant = _resolve_script("SaveSpaceProbe", SAVE_SPACE_PROBE_PATH)
-	if probe_script == null:
-		return _fatal_boot(5, "Kelas SaveSpaceProbe tidak ditemukan.")
-	var version := APP_VERSION.load_version()
-	var save_result: Dictionary = save_service.initialize(
-		log_service, probe_script.new(), str(version["name"])
-	)
-	var save_status := str(save_result.get("status", ""))
-	if save_status != "ok":
-		return _fatal_boot(5, "SaveService gagal diinisialisasi (status: %s)." % save_status)
-	log_service.info(MODULE_NAME, "Langkah 5 selesai: store dimuat dan pemulihan selesai.")
-
-	var apply_result: Dictionary = config_service.apply_player_settings()
-	if str(apply_result.get("status", "")) != "ok":
-		_degraded.append("ConfigService")
-		log_service.warn(
-			MODULE_NAME,
-			"Langkah 6 terdegradasi: pengaturan pemain memakai nilai default (%s)."
-			% str(apply_result.get("status", ""))
-		)
-	else:
-		log_service.info(MODULE_NAME, "Langkah 6 selesai: pengaturan pemain diterapkan.")
-
-	if not _boot_step_audio(log_service, config_service):
-		return _boot_result(BOOT_FATAL)
-	if not _boot_step_input(log_service):
-		return _boot_result(BOOT_FATAL)
-
-	var router_service: Variant = _service("SceneRouter")
-	if router_service == null:
-		return _fatal_boot(9, "SceneRouter tidak tersedia sebagai autoload.")
-	var app_state_script: Variant = _resolve_script("AppState", APP_STATE_PATH)
-	var loader_script: Variant = _resolve_script("CoreResourceLoader", RESOURCE_LOADER_PATH)
-	if app_state_script == null or loader_script == null:
-		return _fatal_boot(9, "Pustaka murni SceneRouter tidak ditemukan.")
-	_app_state = app_state_script.new()
-	var router_result: Dictionary = router_service.initialize(
-		log_service, event_bus, _app_state, loader_script.new()
-	)
-	var router_status := str(router_result.get("status", ""))
-	if router_status != "ok":
-		return _fatal_boot(9, "SceneRouter gagal diinisialisasi (status: %s)." % router_status)
-	log_service.info(MODULE_NAME, "Langkah 9 selesai: route awal dinyatakan.")
-
-	var ready_result: Dictionary = _app_state.mark_ready()
-	if str(ready_result.get("status", "")) != "ok":
-		return _fatal_boot(10, "Transisi status BOOT ke READY ditolak.")
+	var failure: Dictionary = _run_boot_sequence()
+	if int(failure["step"]) > 0:
+		return _fatal_boot(int(failure["step"]), str(failure["detail"]))
 	_boot_ms = Time.get_ticks_msec() - _boot_start_ms
 	_booted = true
-	var ready_emit: Dictionary = event_bus.emit(EVENT_APP_READY_NAME, {"boot_ms": _boot_ms})
+	var ready_emit: Dictionary = _event_bus.emit(EVENT_APP_READY_NAME, {"boot_ms": _boot_ms})
 	if str(ready_emit.get("status", "")) != "ok":
-		log_service.warn(MODULE_NAME, "Pancaran app.ready ditolak: %s" % str(ready_emit))
-	log_service.info(MODULE_NAME, "Boot siap dalam %d ms." % _boot_ms)
+		_log_service.warn(MODULE_NAME, "Pancaran app.ready ditolak: %s" % str(ready_emit))
+	_log_service.info(MODULE_NAME, "Boot siap dalam %d ms." % _boot_ms)
 	return _boot_result(BOOT_READY)
 
 
@@ -269,43 +190,157 @@ func handle_close_request() -> void:
 	request_shutdown()
 
 
-func _boot_step_audio(log_service: Variant, config_service: Variant) -> bool:
+func _run_boot_sequence() -> Dictionary:
+	# Urutan langkah 2 s.d. 10 sesuai INITIALIZATION-LIFECYCLE-DESIGN bagian 3.2;
+	# setiap langkah mengembalikan {"step", "detail"} dengan step 0 berarti sukses.
+	var steps: Array[Callable] = [
+		_boot_step_log,
+		_boot_step_config,
+		_boot_step_events,
+		_boot_step_save,
+		_boot_step_settings,
+		_boot_step_audio,
+		_boot_step_input,
+		_boot_step_navigation,
+	]
+	for step in steps:
+		var failure: Dictionary = step.call()
+		if int(failure["step"]) > 0:
+			return failure
+	return _boot_step_ok()
+
+
+func _boot_step_ok() -> Dictionary:
+	return {"step": 0, "detail": ""}
+
+
+func _boot_step_log() -> Dictionary:
+	_log_service = _service("LogService")
+	if _log_service == null:
+		return {"step": 2, "detail": "LogService tidak tersedia sebagai autoload."}
+	var log_result: Dictionary = _log_service.initialize(LOGS_DIR, _base_log_level())
+	var log_status := str(log_result.get("status", ""))
+	if log_status != "ok":
+		return {"step": 2, "detail": "LogService gagal diinisialisasi (status: %s)." % log_status}
+	_log_service.info(MODULE_NAME, "Langkah 2 selesai: LogService siap.")
+	return _boot_step_ok()
+
+
+func _boot_step_config() -> Dictionary:
+	_config_service = _service("ConfigService")
+	if _config_service == null:
+		return {"step": 3, "detail": "ConfigService tidak tersedia sebagai autoload."}
+	var config_result: Dictionary = _config_service.initialize(_log_service)
+	var config_status := str(config_result.get("status", ""))
+	var config_detail := "ConfigService gagal memuat nilai default (status: %s)." % config_status
+	if config_status != "ok":
+		return {"step": 3, "detail": config_detail}
+	_log_service.info(MODULE_NAME, "Langkah 3 selesai: konfigurasi dasar dimuat.")
+	return _boot_step_ok()
+
+
+func _boot_step_events() -> Dictionary:
+	_event_bus = _service("EventBus")
+	if _event_bus == null:
+		return {"step": 4, "detail": "EventBus tidak tersedia sebagai autoload."}
+	for registration in _app_event_registrations():
+		var reg_result: Dictionary = _event_bus.register_event(
+			registration["name"], registration["mode"], registration["owner"], registration["keys"]
+		)
+		var reg_status := str(reg_result.get("status", ""))
+		var reg_detail := "Registrasi event %s gagal (status: %s)." % [registration["name"], reg_status]
+		if reg_status != "ok":
+			return {"step": 4, "detail": reg_detail}
+	_log_service.info(MODULE_NAME, "Langkah 4 selesai: EventBus siap dan register diaudit.")
+	return _boot_step_ok()
+
+
+func _boot_step_save() -> Dictionary:
+	var save_service: Variant = _service("SaveService")
+	if save_service == null:
+		return {"step": 5, "detail": "SaveService tidak tersedia sebagai autoload."}
+	var probe_script: Variant = _resolve_script("SaveSpaceProbe", SAVE_SPACE_PROBE_PATH)
+	if probe_script == null:
+		return {"step": 5, "detail": "Kelas SaveSpaceProbe tidak ditemukan."}
+	var version := APP_VERSION.load_version()
+	var save_result: Dictionary = save_service.initialize(
+		_log_service, probe_script.new(), str(version["name"])
+	)
+	var save_status := str(save_result.get("status", ""))
+	var save_detail := "SaveService gagal diinisialisasi (status: %s)." % save_status
+	if save_status != "ok":
+		return {"step": 5, "detail": save_detail}
+	_log_service.info(MODULE_NAME, "Langkah 5 selesai: store dimuat dan pemulihan selesai.")
+	return _boot_step_ok()
+
+
+func _boot_step_settings() -> Dictionary:
+	var apply_result: Dictionary = _config_service.apply_player_settings()
+	if str(apply_result.get("status", "")) != "ok":
+		var detail := str(apply_result.get("status", ""))
+		_degraded.append("ConfigService")
+		_log_service.warn(MODULE_NAME, "Langkah 6 terdegradasi: pengaturan pemain default (%s)." % detail)
+	else:
+		_log_service.info(MODULE_NAME, "Langkah 6 selesai: pengaturan pemain diterapkan.")
+	return _boot_step_ok()
+
+
+func _boot_step_audio() -> Dictionary:
 	var audio_service: Variant = _service("AudioService")
 	if audio_service == null:
 		_degraded.append("AudioService")
-		log_service.warn(MODULE_NAME, "Langkah 7 terdegradasi: AudioService tidak tersedia.")
-		return true
-	var result: Dictionary = audio_service.initialize(log_service, config_service)
+		_log_service.warn(MODULE_NAME, "Langkah 7 terdegradasi: AudioService tidak tersedia.")
+		return _boot_step_ok()
+	var result: Dictionary = audio_service.initialize(_log_service, _config_service)
 	var status := str(result.get("status", ""))
-	if status == "ok":
-		log_service.info(MODULE_NAME, "Langkah 7 selesai: volume kategori diterapkan.")
-		return true
 	if status == "fatal":
-		_fatal_boot(7, "AudioService melaporkan kegagalan fatal: dependensi kritis null.")
-		return false
-	_degraded.append("AudioService")
-	log_service.warn(
-		MODULE_NAME, "Langkah 7 terdegradasi: audio berjalan tanpa perangkat (%s)." % status
-	)
-	return true
+		return {"step": 7, "detail": "AudioService fatal: dependensi kritis null."}
+	if status != "ok":
+		_degraded.append("AudioService")
+		_log_service.warn(MODULE_NAME, "Langkah 7 terdegradasi: audio tanpa perangkat (%s)." % status)
+		return _boot_step_ok()
+	_log_service.info(MODULE_NAME, "Langkah 7 selesai: volume kategori diterapkan.")
+	return _boot_step_ok()
 
 
-func _boot_step_input(log_service: Variant) -> bool:
+func _boot_step_input() -> Dictionary:
 	var input_service: Variant = _service("InputService")
 	if input_service == null:
 		_degraded.append("InputService")
-		log_service.warn(MODULE_NAME, "Langkah 8 terdegradasi: InputService tidak tersedia.")
-		return true
-	var result: Dictionary = input_service.initialize(BUILTIN_ACTION_CONFIG, log_service)
+		_log_service.warn(MODULE_NAME, "Langkah 8 terdegradasi: InputService tidak tersedia.")
+		return _boot_step_ok()
+	var result: Dictionary = input_service.initialize(BUILTIN_ACTION_CONFIG, _log_service)
 	var status := str(result.get("status", ""))
+	var action_count := int(result.get("actions", 0))
 	if status == "ok":
-		log_service.info(
-			MODULE_NAME, "Langkah 8 selesai: %d aksi terdaftar." % int(result.get("actions", 0))
-		)
-		return true
-	_degraded.append("InputService")
-	log_service.warn(MODULE_NAME, "Langkah 8 terdegradasi: façade input tanpa aksi (%s)." % status)
-	return true
+		_log_service.info(MODULE_NAME, "Langkah 8 selesai: %d aksi terdaftar." % action_count)
+	else:
+		_degraded.append("InputService")
+		_log_service.warn(MODULE_NAME, "Langkah 8 terdegradasi: façade input tanpa aksi (%s)." % status)
+	return _boot_step_ok()
+
+
+func _boot_step_navigation() -> Dictionary:
+	var router_service: Variant = _service("SceneRouter")
+	if router_service == null:
+		return {"step": 9, "detail": "SceneRouter tidak tersedia sebagai autoload."}
+	var app_state_script: Variant = _resolve_script("AppState", APP_STATE_PATH)
+	var loader_script: Variant = _resolve_script("CoreResourceLoader", RESOURCE_LOADER_PATH)
+	if app_state_script == null or loader_script == null:
+		return {"step": 9, "detail": "Pustaka murni SceneRouter tidak ditemukan."}
+	_app_state = app_state_script.new()
+	var router_result: Dictionary = router_service.initialize(
+		_log_service, _event_bus, _app_state, loader_script.new()
+	)
+	var router_status := str(router_result.get("status", ""))
+	var router_detail := "SceneRouter gagal diinisialisasi (status: %s)." % router_status
+	if router_status != "ok":
+		return {"step": 9, "detail": router_detail}
+	_log_service.info(MODULE_NAME, "Langkah 9 selesai: route awal dinyatakan.")
+	var ready_result: Dictionary = _app_state.mark_ready()
+	if str(ready_result.get("status", "")) != "ok":
+		return {"step": 10, "detail": "Transisi status BOOT ke READY ditolak."}
+	return _boot_step_ok()
 
 
 func _check_resume_consistency() -> void:
@@ -353,10 +388,11 @@ func _show_fatal_overlay() -> void:
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	layer.add_child(label)
 	get_tree().root.add_child(layer)
-	get_tree().create_timer(FATAL_QUIT_DELAY_SEC).timeout.connect(
-		func() -> void:
-			get_tree().quit(1)
-	)
+	get_tree().create_timer(FATAL_QUIT_DELAY_SEC).timeout.connect(_quit_after_fatal)
+
+
+func _quit_after_fatal() -> void:
+	get_tree().quit(1)
 
 
 func _boot_result(status: String) -> Dictionary:
