@@ -32,6 +32,16 @@ jobs:
       - name: Run gdlint
         working-directory: game
         run: gdlint src tools tests
+      - name: Diagnose lint failure
+        if: failure()
+        working-directory: game
+        run: |
+          set +e
+          gdlint src tools tests > lint_diag.txt 2>&1
+          grep -E "Error|Failure|problem" lint_diag.txt | tail -n 20 | while IFS= read -r line; do
+            echo "::error::${line}"
+          done
+          exit 0
 
   validate:
     name: Validate project and run foundation tests

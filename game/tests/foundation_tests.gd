@@ -144,6 +144,7 @@ func _test_script_parsing() -> void:
 	for root in SCRIPT_SCAN_ROOTS:
 		_collect_scripts(root, script_paths)
 	_check(script_paths.size() > 0, "Skrip GDScript harus ditemukan pada direktori sumber")
+	var autoload_paths := _autoload_script_paths()
 	for path in script_paths:
 		if path.get_file() == "foundation_tests.gd":
 			# Harness ini tidak me-reload dirinya sendiri karena sedang dieksekusi.
@@ -153,8 +154,25 @@ func _test_script_parsing() -> void:
 			continue
 		if not _check(resource is GDScript, "Resource harus berupa GDScript: %s" % path):
 			continue
+		if path in autoload_paths:
+			# Skrip autoload memiliki instansi hidup sehingga reload() tidak mungkin
+			# dilakukan; pemeriksaan penguraian tetap terpenuhi melalui load() di atas.
+			continue
 		var script := resource as GDScript
 		_check(script.reload() == OK, "Skrip harus lolos parsing tanpa error: %s" % path)
+
+
+## Mengembalikan path skrip yang terdaftar sebagai autoload pada project.godot.
+## Nilai autoload berformat "*res://path"; awalan bintang dibuang sebelum dikumpulkan.
+func _autoload_script_paths() -> Array[String]:
+	var paths: Array[String] = []
+	for singleton_name in ProjectSettings.get_singleton_names():
+		var setting := str(ProjectSettings.get_setting("autoload/" + singleton_name, ""))
+		if setting.begins_with("*"):
+			setting = setting.substr(1)
+		if setting.ends_with(".gd"):
+			paths.append(setting)
+	return paths
 
 
 func _collect_scripts(dir_path: String, output: Array[String]) -> void:
