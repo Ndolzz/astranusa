@@ -38,7 +38,7 @@ jobs:
         run: |
           set +e
           gdlint src tools tests > lint_diag.txt 2>&1
-          grep -E "Error|Failure|problem" lint_diag.txt | tail -n 20 | while IFS= read -r line; do
+          tail -n 25 lint_diag.txt | while IFS= read -r line; do
             echo "::error::${line}"
           done
           exit 0

@@ -163,11 +163,15 @@ func _test_script_parsing() -> void:
 
 
 ## Mengembalikan path skrip yang terdaftar sebagai autoload pada project.godot.
-## Nilai autoload berformat "*res://path"; awalan bintang dibuang sebelum dikumpulkan.
+## Properti autoload berformat "autoload/<nama>" dengan nilai "*res://path";
+## awalan bintang dibuang dan hanya path berkas .gd yang dikumpulkan.
 func _autoload_script_paths() -> Array[String]:
 	var paths: Array[String] = []
-	for singleton_name in ProjectSettings.get_singleton_names():
-		var setting := str(ProjectSettings.get_setting("autoload/" + singleton_name, ""))
+	for property in ProjectSettings.get_property_list():
+		var property_name := str(property.get("name", ""))
+		if not property_name.begins_with("autoload/"):
+			continue
+		var setting := str(ProjectSettings.get_setting(property_name, ""))
 		if setting.begins_with("*"):
 			setting = setting.substr(1)
 		if setting.ends_with(".gd"):
