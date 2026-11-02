@@ -81,8 +81,11 @@ jobs:
           for suite in tests/core_*_tests.gd; do
             [ -e "$suite" ] || continue
             echo "Menjalankan suite: $suite"
-            if ! ../godot --headless --script "res://$suite"; then
+            if ! ../godot --headless --script "res://$suite" 2>&1 | tee suite_diag.txt; then
               echo "::error file=game/$suite::Suite $suite gagal"
+              grep -E "FAIL:|SCRIPT ERROR|FAILED" suite_diag.txt | tail -n 10 | while IFS= read -r line; do
+                echo "::error file=game/$suite::${line}"
+              done
               exit 1
             fi
           done

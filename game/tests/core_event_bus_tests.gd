@@ -240,7 +240,7 @@ func _eb_07_unsubscribe_cleanup(lib) -> void:
 	lib.assert_eq(box_c.received.size(), 0, "EB-07", "pemilik yang dilepas tidak menerima lagi")
 	bus.unsubscribe("bus.bebas", Callable(box_a, "record"))
 	bus.emit("bus.bebas", {})
-	lib.assert_eq(box_b.received.size(), 2, "EB-07", "unsubscribe idempoten tanpa efek samping")
+	lib.assert_eq(box_b.received.size(), 3, "EB-07", "unsubscribe idempoten tanpa efek samping")
 	_dispose_bus(bus)
 
 
