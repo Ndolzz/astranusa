@@ -85,6 +85,8 @@ jobs:
               echo "::error file=game/$suite::Suite $suite gagal"
               ringkasan=$(grep -E "FAIL:|SCRIPT ERROR|FAILED" suite_diag.txt | head -n 30 | tr '\n' ' ' | tr -d '\r' | cut -c1-1500)
               echo "::error file=game/$suite::DIAG: ${ringkasan}"
+              probe_gabung=$(grep -E "PROBE|ERROR \[|ERROR:" suite_diag.txt | head -n 25 | tr '\n' ' ' | tr -d '\r' | cut -c1-1400)
+              echo "::error file=game/$suite::PROBE: ${probe_gabung}"
               exit 1
             fi
           done

@@ -66,6 +66,7 @@ class RecursiveListener extends RefCounted:
 func _initialize() -> void:
 	var lib := TestLib.new("core_event_bus_tests")
 	lib.assert_true(_prepare_log_service(), "EB", "LogService autoload tersedia untuk suite")
+	_probe_log_path()
 	_eb_01_register_and_duplicate(lib)
 	_eb_02_unknown_event_rejected(lib)
 	_eb_03_immediate_order(lib)
@@ -92,6 +93,31 @@ func _prepare_log_service() -> bool:
 	var init_res: Dictionary = logger.initialize(LOG_DIR, "DEBUG")
 	return str(init_res.get("status", "")) == "ok"
 
+
+
+
+func _probe_log_path() -> void:
+	# Probe diagnostik sementara: memeriksa jumlah anak akar, jalur node logger,
+	# resolusi jalur bus, dan penulisan berkas log; dihapus setelah akar kegagalan
+	# penulisan log pada suite EB terkonfirmasi dari keluaran CI.
+	print("PROBE jumlah_anak_akar=", root.get_child_count())
+	print("PROBE debug_build=", OS.is_debug_build())
+	var logger: Variant = root.get_node_or_null("LogService")
+	print("PROBE logger_ditemukan=", logger != null)
+	if logger == null:
+		return
+	print("PROBE jalur_logger=", str(logger.get_path()))
+	print("PROBE dalam_pohon=", logger.is_inside_tree())
+	print("PROBE resolusi_bus=", root.get_node_or_null("/root/LogService") != null)
+	logger.error("SuiteEB", "PROBE pesan langsung tanpa bus")
+	var direct: Dictionary = logger.flush()
+	print("PROBE siram_langsung=", str(direct.get("status", "")))
+	print("PROBE panjang_berkas=", _log_content().length())
+	var bus: Variant = _new_bus()
+	bus.emit("probe.takda", {})
+	_flush_log()
+	print("PROBE isi_mengandung_bus=", _log_content().contains("probe.takda"))
+	_dispose_bus(bus)
 
 func _flush_log() -> void:
 	var logger: Variant = root.get_node_or_null("LogService")
