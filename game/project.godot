@@ -18,6 +18,8 @@ config/icon="res://assets/icon.svg"
 
 [autoload]
 
+LogService="*res://src/core/log_service.gd"
+EventBus="*res://src/core/event_bus.gd"
 AppBootstrap="*res://src/core/app_bootstrap.gd"
 
 [display]

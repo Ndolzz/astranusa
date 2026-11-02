@@ -30,11 +30,9 @@ const BUILTIN_ACTION_CONFIG := {
 	"ui_cancel": {"events": [{"type": "key", "code": KEY_ESCAPE}]},
 }
 
-## Nama event final SDD-02 (EVENT-BUS-SPEC bagian 3); konstanta kanonik berada
-## pada core_events.gd dan dirujuk AppBootstrap sejak tahap implementasi EventBus.
-const EVENT_APP_PAUSED_NAME := "app.paused"
-const EVENT_APP_RESUMED_NAME := "app.resumed"
-const EVENT_APP_READY_NAME := "app.ready"
+## Register event final SDD-02 dirujuk dari konstanta kanonik core_events.gd
+## (EVENT-BUS-SPEC bagian 3); AppBootstrap mendaftarkan tiga event miliknya
+## pada langkah 4 dan memancarkan app.ready setelah transisi READY.
 
 const SHUTDOWN_FLUSH_DEADLINE_MS := 500
 const FATAL_QUIT_DELAY_SEC := 3.0
@@ -104,7 +102,7 @@ func initialize() -> Dictionary:
 		return _fatal_boot(int(failure["step"]), str(failure["detail"]))
 	_boot_ms = Time.get_ticks_msec() - _boot_start_ms
 	_booted = true
-	var ready_emit: Dictionary = _event_bus.emit(EVENT_APP_READY_NAME, {"boot_ms": _boot_ms})
+	var ready_emit: Dictionary = _event_bus.emit(CoreEvents.EVENT_APP_READY, {"boot_ms": _boot_ms})
 	if str(ready_emit.get("status", "")) != "ok":
 		_log_service.warn(MODULE_NAME, "Pancaran app.ready ditolak: %s" % str(ready_emit))
 	_log_service.info(MODULE_NAME, "Boot siap dalam %d ms." % _boot_ms)
@@ -152,7 +150,7 @@ func handle_pause() -> void:
 	_paused = true
 	var event_bus: Variant = _service("EventBus")
 	if event_bus != null and _booted:
-		event_bus.emit(EVENT_APP_PAUSED_NAME, {})
+		event_bus.emit(CoreEvents.EVENT_APP_PAUSED, {})
 	var input_service: Variant = _service("InputService")
 	if input_service != null:
 		input_service.set_paused(true)
@@ -175,7 +173,7 @@ func handle_resume() -> void:
 	_paused = false
 	var event_bus: Variant = _service("EventBus")
 	if event_bus != null and _booted:
-		event_bus.emit(EVENT_APP_RESUMED_NAME, {})
+		event_bus.emit(CoreEvents.EVENT_APP_RESUMED, {})
 	var input_service: Variant = _service("InputService")
 	if input_service != null:
 		input_service.set_paused(false)
@@ -401,16 +399,26 @@ func _boot_result(status: String) -> Dictionary:
 
 func _app_event_registrations() -> Array[Dictionary]:
 	var no_keys: Array[String] = []
-	var boot_keys: Array[String] = ["boot_ms"]
+	var boot_keys: Array[String] = [CoreEvents.KEY_BOOT_MS]
 	return [
-		{"name": EVENT_APP_PAUSED_NAME, "mode": "immediate", "owner": MODULE_NAME, "keys": no_keys},
 		{
-			"name": EVENT_APP_RESUMED_NAME,
-			"mode": "immediate",
+			"name": CoreEvents.EVENT_APP_PAUSED,
+			"mode": CoreEvents.MODE_IMMEDIATE,
+			"owner": MODULE_NAME,
+			"keys": no_keys,
+		},
+		{
+			"name": CoreEvents.EVENT_APP_RESUMED,
+			"mode": CoreEvents.MODE_IMMEDIATE,
 			"owner": MODULE_NAME,
 			"keys": no_keys.duplicate(),
 		},
-		{"name": EVENT_APP_READY_NAME, "mode": "deferred", "owner": MODULE_NAME, "keys": boot_keys},
+		{
+			"name": CoreEvents.EVENT_APP_READY,
+			"mode": CoreEvents.MODE_DEFERRED,
+			"owner": MODULE_NAME,
+			"keys": boot_keys,
+		},
 	]
 
 
