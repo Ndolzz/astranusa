@@ -59,7 +59,8 @@ class RecursiveListener extends RefCounted:
 	func record(_payload: Dictionary) -> void:
 		hits += 1
 		var result: Dictionary = bus.emit("bus.rekursi", {})
-		inner_status = str(result["status"])
+		if inner_status == "":
+			inner_status = str(result["status"])
 
 
 func _initialize() -> void:
@@ -86,6 +87,7 @@ func _prepare_log_service() -> bool:
 	if logger == null:
 		var script: Variant = load(LOG_SERVICE_PATH)
 		logger = script.new()
+		logger.name = "LogService"
 		root.add_child(logger)
 	var init_res: Dictionary = logger.initialize(LOG_DIR, "DEBUG")
 	return str(init_res.get("status", "")) == "ok"
