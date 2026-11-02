@@ -83,9 +83,8 @@ jobs:
             echo "Menjalankan suite: $suite"
             if ! ../godot --headless --script "res://$suite" 2>&1 | tee suite_diag.txt; then
               echo "::error file=game/$suite::Suite $suite gagal"
-              grep -E "FAIL:|SCRIPT ERROR|FAILED" suite_diag.txt | tail -n 10 | while IFS= read -r line; do
-                echo "::error file=game/$suite::${line}"
-              done
+              ringkasan=$(grep -E "FAIL:|SCRIPT ERROR|FAILED" suite_diag.txt | head -n 30 | tr '\n' ' ' | tr -d '\r' | cut -c1-1500)
+              echo "::error file=game/$suite::DIAG: ${ringkasan}"
               exit 1
             fi
           done

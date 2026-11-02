@@ -164,14 +164,17 @@ func _dispatch(name: String, payload: Dictionary) -> void:
 
 func _purge_dead_owners(name: String) -> void:
 	var entries: Array = _listeners.get(name, [])
-	var dead: Array = []
-	for entry in entries:
-		var owner: Object = entry["owner"]
-		if not is_instance_valid(owner) and not dead.has(owner):
-			dead.append(owner)
-	for owner in dead:
-		_log("warn", "Listener pemilik dibebaskan dilewati; langganan pemilik dilepas (%s)." % name)
-		unsubscribe_owner(owner)
+	var dead_count := 0
+	for i in range(entries.size() - 1, -1, -1):
+		var entry: Dictionary = entries[i]
+		if not is_instance_valid(entry["owner"]):
+			entries.remove_at(i)
+			dead_count += 1
+	if dead_count == 0:
+		return
+	_log("warn", "Listener pemilik dibebaskan dilewati; langganan pemilik dilepas (%s)." % name)
+	if entries.is_empty():
+		_listeners.erase(name)
 
 
 func _missing_keys(required_keys: Array[String], payload: Dictionary) -> Array[String]:

@@ -10,6 +10,7 @@ extends SceneTree
 
 
 const EVENT_BUS_PATH := "res://src/core/event_bus.gd"
+const LOG_SERVICE_PATH := "res://src/core/log_service.gd"
 const TestLib := preload("res://tests/core_test_lib.gd")
 const LOG_DIR := "user://logs-eb/"
 
@@ -83,9 +84,11 @@ func _initialize() -> void:
 func _prepare_log_service() -> bool:
 	var logger: Variant = root.get_node_or_null("LogService")
 	if logger == null:
-		return false
-	logger.initialize(LOG_DIR, "DEBUG")
-	return true
+		var script: Variant = load(LOG_SERVICE_PATH)
+		logger = script.new()
+		root.add_child(logger)
+	var init_res: Dictionary = logger.initialize(LOG_DIR, "DEBUG")
+	return str(init_res.get("status", "")) == "ok"
 
 
 func _flush_log() -> void:
@@ -257,8 +260,10 @@ func _eb_08_dead_owner_skipped(lib) -> void:
 	lib.assert_eq(
 		alive_box.received.size(), 0, "EB-08", "listener pemilik mati tidak dipanggil"
 	)
-	var leftover: int = bus.unsubscribe_owner(owner_node)
-	lib.assert_eq(leftover, 0, "EB-08", "langganan pemilik mati dilepas otomatis")
+	var listeners: Dictionary = bus._listeners
+	lib.assert_false(
+		listeners.has("bus.mati"), "EB-08", "langganan pemilik mati dilepas otomatis"
+	)
 	_flush_log()
 	lib.assert_true(
 		_log_content().contains("dibebaskan"), "EB-08", "pemilik mati tercatat sebagai WARN"
